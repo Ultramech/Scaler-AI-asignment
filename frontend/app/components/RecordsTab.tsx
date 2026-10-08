@@ -130,7 +130,7 @@ export function RecordsTab({ zone, records, filter, onFilter, selected, onSelect
   };
 
   const filtersActive = Boolean(filter || type || policy || alias);
-  const count = selected.size ? `${selected.size}/${all.length}` : String(filtered.length);
+  const count = selected.size ? `${selected.size}/${all.length}` : records.data ? String(filtered.length) : String(zone.record_count);
 
   return (
     <Container

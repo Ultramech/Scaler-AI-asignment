@@ -35,6 +35,7 @@ const flash = (text) => page.locator(".flashbar .alert", { hasText: text }).firs
 const hash = () => page.evaluate(() => location.hash);
 const text = async (sel) => (await page.locator(sel).first().innerText()).replace(/\s+/g, " ").trim();
 const rowsEqual = (n) => page.waitForFunction((count) => document.querySelectorAll("tbody tr").length === count, n);
+const ready = () => page.waitForFunction(() => !document.querySelector(".table-empty") && document.querySelectorAll("tbody tr").length > 0);
 const recordsCount = async () => Number((await text(".records-card .container-header h2")).match(/\((\d+)(?:\/\d+)?\)/)[1]);
 
 console.log("Auth");
@@ -114,7 +115,7 @@ await step("create a public zone with description and tag", async () => {
   await page.getByLabel("Tag 1 value").fill("test");
   await page.getByRole("button", { name: "Create hosted zone" }).click();
   await flash("Successfully created hosted zone e2e-test.com").waitFor();
-  await page.getByRole("heading", { name: /e2e-test\.com/ }).waitFor();
+  await page.getByRole("heading", { name: /e2e-test\.com/ }).waitFor(); await ready();
   assert.equal(await recordsCount(), 2);
 });
 const ZID = (await hash()).match(/hostedzones\/([A-Z0-9]+)/)[1];
@@ -190,7 +191,7 @@ await step("quick create validates then creates two records at once", async () =
   await page.locator("#record-1-type").selectOption("TXT");
   await page.locator("#record-1-value").fill("hello world");
   await page.getByRole("button", { name: "Create records" }).click();
-  await flash("2 records created successfully").waitFor();
+  await flash("2 records created successfully").waitFor(); await ready();
   assert.equal(await recordsCount(), 4);
 });
 await step("created records show correct values, TTL and quoting", async () => {
@@ -214,7 +215,7 @@ await step("alias record: toggle hides TTL, saves and shows in details panel", a
   await page.locator("#record-0-value").fill("d111.cloudfront.net");
   await page.getByRole("switch", { name: "Evaluate target health" }).check({ force: true });
   await page.getByRole("button", { name: "Create records" }).click();
-  await flash("Record created successfully").waitFor();
+  await flash("Record created successfully").waitFor(); await ready();
   await page.locator("tbody tr", { hasText: "cdn.e2e-test.com" }).locator("input").check();
   assert.match(await text(".tools"), /Alias target/); assert.match(await text(".tools"), /Evaluate target health Yes/);
   await page.locator("tbody tr", { hasText: "cdn.e2e-test.com" }).locator("input").uncheck();
@@ -236,7 +237,7 @@ await step("wizard: choose routing policy, Record ID is required", async () => {
   await page.getByRole("heading", { name: "Choose routing policy" }).waitFor();
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.getByRole("button", { name: "Create records" }).click();
-  await flash("Record created successfully").waitFor();
+  await flash("Record created successfully").waitFor(); await ready();
 });
 await step("all nine required record types can be created through the form", async () => {
   const samples = [
@@ -251,7 +252,7 @@ await step("all nine required record types can be created through the form", asy
     await page.locator(`#record-${i}-value`).fill(samples[i][1]);
   }
   await page.getByRole("button", { name: "Create records" }).click();
-  await flash("9 records created successfully").waitFor();
+  await flash("9 records created successfully").waitFor(); await ready();
   const body = await text("tbody");
   for (const [type, value] of samples) {
     const row = page.locator("tbody tr", { hasText: `t-${type.toLowerCase()}.e2e-test.com` });
@@ -276,7 +277,7 @@ await step("edit record from the details panel updates it", async () => {
   await page.locator("#edit-record-value").fill("198.51.100.99");
   await page.locator("#edit-record-ttl").fill("120");
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await flash("Record updated successfully").waitFor();
+  await flash("Record updated successfully").waitFor(); await ready();
   const row = await page.locator("tbody tr", { hasText: "www.e2e-test.com" }).innerText();
   assert.match(row, /198\.51\.100\.99/); assert.match(row, /120/);
   assert.match(await text(".tools"), /Record details/);
@@ -510,7 +511,7 @@ await step("sidebar placeholders show Coming soon; Dashboard works", async () =>
   await page.getByText("Coming soon").waitFor();
   await page.getByRole("link", { name: "Dashboard" }).click();
   await page.getByRole("heading", { name: /Route 53 Dashboard/ }).waitFor();
-  await page.waitForFunction(() => /DNS management \d+ Hosted zones?/.test(document.querySelector(".summary")?.textContent?.replace(/\s+/g, " ") ?? ""));
+  await page.waitForFunction(() => /DNS management\s*\d+\s*Hosted zones?/.test(document.querySelector(".summary")?.textContent?.replace(/\s+/g, " ") ?? ""));
   await page.getByRole("link", { name: "Hosted zones", exact: true }).first().click();
 });
 await step("browser back/forward follows the hash routes", async () => {
