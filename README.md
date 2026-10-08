@@ -6,6 +6,13 @@ A functional clone of the AWS Route 53 console with persistent storage and a bac
 - **Backend:** FastAPI + SQLAlchemy
 - **Database:** SQLite (`backend/route53.db`, created on first start)
 
+## Live demo
+
+- App: <https://route53-clone-three-gamma.vercel.app> (sign in with any email)
+- API: <https://route53-clone-api-s69g.onrender.com/docs>
+
+The frontend runs on Vercel and the API on Render's free tier. The free tier sleeps when idle, so the first request can take up to a minute, and its disk is reset on restart, so records created in the demo are not kept long-term (the sample `example.com` zone is re-created). Run it locally for durable storage.
+
 ## Features
 
 **Authentication (mocked)** – sign in, sign out and a session that survives reloads. No AWS account or credentials are involved.
