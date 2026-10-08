@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response, status
@@ -184,10 +185,21 @@ async def lifespan(_: FastAPI):
     yield
 
 
+# Comma-separated list of browser origins allowed to call the API (set to the deployed frontend URL).
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("ROUTE53_CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+    if origin.strip()
+]
+
+# Optional regex for preview/production URLs that change per deployment, e.g. https://.*\.vercel\.app
+ALLOWED_ORIGIN_REGEX = os.getenv("ROUTE53_CORS_ORIGIN_REGEX") or None
+
 app = FastAPI(title="Route 53 Clone API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=ALLOWED_ORIGIN_REGEX,
     allow_methods=["*"],
     allow_headers=["*"],
 )
