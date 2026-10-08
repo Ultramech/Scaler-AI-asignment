@@ -20,6 +20,7 @@ from app.main import (
     export_zone,
     import_records,
     list_records,
+    search_resources,
     update_record,
     update_zone,
 )
@@ -38,6 +39,7 @@ async def verify() -> None:
         assert changed["routing_policy"] == "Failover"
         imported = import_records(zone["id"], ImportInput(content=f"$ORIGIN {domain}.\n$TTL 300\nmail IN MX 10 mail.{domain}."), database, user)
         assert imported["imported"] == 1
+        assert any(result["kind"] == "Record" for result in search_resources("mail", database, user))
         assert "MX" in export_zone(zone["id"], "bind", database, user).body.decode()
         assert len(list_records(zone["id"], "", database, user)) == 2
         bulk_delete_records(zone["id"], BulkRecordInput(ids=[record["id"], imported["records"][0]["id"]]), database, user)
