@@ -9,3 +9,7 @@ backend/app/__pycache__/
 
 # Runtime data
 backend/route53.db
+
+# OS / tooling
+.DS_Store
+*.tsbuildinfo

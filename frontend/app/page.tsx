@@ -1,34 +1,96 @@
 "use client";
-import { FormEvent, useEffect, useRef, useState } from "react";
-type Zone={id:string;name:string;comment:string;private_zone:boolean;record_count:number};
-type Record={id:number;name:string;type:string;value:string;ttl:number;routing_policy:string};
-type SearchResult={kind:"Hosted zone"|"Record";label:string;detail:string;zone_id:string;record_id?:number};
-type Dialog="create-zone"|"edit-zone"|"delete-zone"|"record"|"delete-record"|"bulk"|null;
-const api=process.env.NEXT_PUBLIC_API_URL||"http://localhost:8000";
-const types=["A","AAAA","CNAME","TXT","MX","NS","PTR","SRV","CAA"],policies=["Simple","Weighted","Latency","Failover","Geolocation"];
-function Modal({title,close,children}:{title:string;close:()=>void;children:React.ReactNode}){return <div className="backdrop"><section className="modal" role="dialog" aria-modal="true"><header><h2>{title}</h2><button className="close" onClick={close} aria-label="Close">×</button></header>{children}</section></div>}
-export default function Console(){
- const [token,setToken]=useState<string|null>(null),[zones,setZones]=useState<Zone[]>([]),[zone,setZone]=useState<Zone|null>(null),[records,setRecords]=useState<Record[]>([]),[zoneFilter,setZoneFilter]=useState(""),[recordFilter,setRecordFilter]=useState(""),[dialog,setDialog]=useState<Dialog>(null),[editing,setEditing]=useState<Record|null>(null),[selected,setSelected]=useState(new Set<number>()),[notice,setNotice]=useState(""),[dark,setDark]=useState(false),[nav,setNav]=useState("Hosted zones");
- const file=useRef<HTMLInputElement>(null),search=useRef<HTMLInputElement>(null);const headers=()=>({"Content-Type":"application/json",Authorization:`Bearer ${token}`});
- const request=async(path:string,options:RequestInit={})=>{const res=await fetch(api+path,{...options,headers:{...headers(),...(options.headers||{})}});if(!res.ok)throw Error((await res.json().catch(()=>({detail:"Request failed"}))).detail);return res.status===204?null:res.json()};
- const loadZones=async()=>{try{const result=await request(`/zones?q=${encodeURIComponent(zoneFilter)}`);setZones(result);setZone(old=>result.find((item:Zone)=>item.id===old?.id)||result[0]||null)}catch(error){setNotice(error instanceof Error?error.message:"Unable to load hosted zones")}};
- const loadRecords=async(id:string)=>{try{setRecords(await request(`/zones/${id}/records?q=${encodeURIComponent(recordFilter)}`));setSelected(new Set())}catch(error){setNotice(error instanceof Error?error.message:"Unable to load records")}};
- useEffect(()=>{const saved=localStorage.getItem("r53-token");if(saved)setToken(saved);setDark(localStorage.getItem("r53-theme")==="dark")},[]);
- useEffect(()=>{if(token)loadZones()},[token,zoneFilter]);useEffect(()=>{if(token&&zone)loadRecords(zone.id)},[token,zone?.id,recordFilter]);useEffect(()=>{if(!notice)return;const t=setTimeout(()=>setNotice(""),3500);return()=>clearTimeout(t)},[notice]);
- useEffect(()=>{const key=(event:KeyboardEvent)=>{if(event.key==="/"&&!dialog){event.preventDefault();search.current?.focus()}if(event.key.toLowerCase()==="n"&&!dialog&&zone){setEditing(null);setDialog("record")}if(event.key==="Escape")setDialog(null)};addEventListener("keydown",key);return()=>removeEventListener("keydown",key)},[dialog,zone]);
- const saveZone=async(event:FormEvent<HTMLFormElement>)=>{event.preventDefault();const form=new FormData(event.currentTarget),body={name:String(form.get("name")),comment:String(form.get("comment")),private_zone:form.get("private")==="on"};try{const result=await request(dialog==="edit-zone"?`/zones/${zone?.id}`:"/zones",{method:dialog==="edit-zone"?"PUT":"POST",body:JSON.stringify(body)});setZone(result);setDialog(null);setNotice(dialog==="edit-zone"?"Hosted zone updated":"Hosted zone created");loadZones()}catch(error){setNotice(error instanceof Error?error.message:"Unable to save hosted zone")}};
- const saveRecord=async(event:FormEvent<HTMLFormElement>)=>{event.preventDefault();if(!zone)return;const form=new FormData(event.currentTarget),body={name:String(form.get("name")),type:String(form.get("type")),value:String(form.get("value")),ttl:Number(form.get("ttl")),routing_policy:String(form.get("policy"))};try{await request(editing?`/records/${editing.id}`:`/zones/${zone.id}/records`,{method:editing?"PUT":"POST",body:JSON.stringify(body)});setDialog(null);setEditing(null);setNotice(editing?"Record updated":"Record created");loadRecords(zone.id);loadZones()}catch(error){setNotice(error instanceof Error?error.message:"Unable to save record")}};
- const remove=async()=>{if(!zone)return;try{if(dialog==="delete-zone"){await request(`/zones/${zone.id}`,{method:"DELETE"});setZone(null);setNotice("Hosted zone deleted");loadZones()}if(dialog==="delete-record"&&editing){await request(`/records/${editing.id}`,{method:"DELETE"});setNotice("Record deleted");loadRecords(zone.id);loadZones()}if(dialog==="bulk"){await request(`/zones/${zone.id}/records`,{method:"DELETE",body:JSON.stringify({ids:[...selected]})});setNotice(`${selected.size} records deleted`);loadRecords(zone.id);loadZones()}setDialog(null);setEditing(null)}catch(error){setNotice(error instanceof Error?error.message:"Unable to delete")}};
- const download=async(format:"json"|"bind")=>{if(!zone)return;try{const response=await fetch(`${api}/zones/${zone.id}/export?format=${format}`,{headers:headers()});if(!response.ok)throw Error("Export failed");const data=format==="json"?JSON.stringify(await response.json(),null,2):await response.text(),link=document.createElement("a");link.href=URL.createObjectURL(new Blob([data]));link.download=`${zone.name.replace(/\.$/,"")}.${format==="json"?"json":"zone"}`;link.click();setNotice(`Exported ${format.toUpperCase()}`)}catch(error){setNotice(error instanceof Error?error.message:"Export failed")}};
- const importBind=async(event:FormEvent<HTMLInputElement>)=>{const input=event.currentTarget,upload=input.files?.[0];if(!upload||!zone)return;try{const result=await request(`/zones/${zone.id}/records/import`,{method:"POST",body:JSON.stringify({content:await upload.text()})});setNotice(`${result.imported} records imported from BIND`);loadRecords(zone.id);loadZones()}catch(error){setNotice(error instanceof Error?error.message:"Import failed")}finally{input.value=""}};
- const select=(id:number)=>setSelected(current=>{const next=new Set(current);next.has(id)?next.delete(id):next.add(id);return next});
- const workspaceSearch=async(query:string):Promise<SearchResult[]>=>query.trim()?await request(`/search?q=${encodeURIComponent(query)}`):[];
- const openSearchResult=(result:SearchResult)=>{const target=zones.find(item=>item.id===result.zone_id);if(target){setZone(target);setNav("Hosted zones");if(result.kind==="Record")setRecordFilter(result.label)}else setNotice("That result is no longer available. Refresh and try again.")};
- useEffect(()=>{const choose=(event:Event)=>openSearchResult((event as CustomEvent<SearchResult>).detail);addEventListener("route53-search-result",choose);return()=>removeEventListener("route53-search-result",choose)},[zones]);
- if(!token)return <Login done={value=>{localStorage.setItem("r53-token",value);setToken(value)}}/>;
- const isZones=nav==="Hosted zones";
- return <main className={dark?"dark":""}><Topbar dark={dark} theme={()=>{const next=!dark;setDark(next);localStorage.setItem("r53-theme",next?"dark":"light")}} logout={()=>{localStorage.removeItem("r53-token");setToken(null)}}/><div className="shell"><Sidebar active={nav} choose={setNav}/><section className="workspace">{!isZones?<section className="coming"><div className="orbit">◌</div><h1>{nav}</h1><p>Mocked workspace — this section is outside the assignment scope.</p><button onClick={()=>setNav("Hosted zones")}>Return to hosted zones</button></section>:<><div className="crumb">Route 53 <span>›</span> Hosted zones</div><div className="page-head"><div><h1>Hosted zones</h1><p>A hosted zone is a container for records that defines how you route traffic for a domain.</p></div><button className="primary" onClick={()=>setDialog("create-zone")}>＋ Create hosted zone</button></div><div className="two-col"><section className="panel zones"><div className="panel-title"><h2>Hosted zones <small>({zones.length})</small></h2><button className="refresh" onClick={loadZones}>↻</button></div><div className="search">⌕<input value={zoneFilter} onChange={e=>setZoneFilter(e.target.value)} placeholder="Filter hosted zones"/></div><div className="zone-list">{zones.map(item=><button key={item.id} className={zone?.id===item.id?"zone selected":"zone"} onClick={()=>setZone(item)}><span className="domain-dot">◎</span><span><b>{item.name}</b><small>{item.private_zone?"Private":"Public"} hosted zone · {item.record_count} records</small></span></button>)}{!zones.length&&<p className="empty">No hosted zones found.</p>}</div></section><section className="panel detail">{zone?<><div className="detail-top"><div><span className="eyebrow">HOSTED ZONE</span><h2>{zone.name}</h2><p>{zone.comment||"No description"}</p></div><div className="actions"><button onClick={()=>setDialog("edit-zone")}>Edit</button><button className="danger" onClick={()=>setDialog("delete-zone")}>Delete</button></div></div><div className="facts"><div><span>Hosted zone ID</span><code>{zone.id}</code></div><div><span>Type</span><b>{zone.private_zone?"Private":"Public"}</b></div><div><span>Record count</span><b>{zone.record_count}</b></div></div><div className="records-head"><div><h2>Records <small>({records.length})</small></h2><p>Use <kbd>N</kbd> to create and <kbd>/</kbd> to filter records.</p></div><div className="record-tools"><button onClick={()=>download("json")}>Export JSON</button><button onClick={()=>download("bind")}>Export BIND</button><button onClick={()=>file.current?.click()}>Import BIND</button><input className="hidden" ref={file} type="file" accept=".zone,.bind,.txt" onChange={importBind}/><button className="primary" onClick={()=>{setEditing(null);setDialog("record")}}>Create record</button></div></div>{selected.size>0&&<div className="bulk-bar"><b>{selected.size} selected</b><button onClick={()=>setSelected(new Set())}>Clear selection</button><button className="danger" onClick={()=>setDialog("bulk")}>Delete records</button></div>}<div className="search record-search">⌕<input ref={search} value={recordFilter} onChange={e=>setRecordFilter(e.target.value)} placeholder="Filter records by name, type, or value"/></div><table><thead><tr><th><input aria-label="Select all records" type="checkbox" checked={records.length>0&&selected.size===records.length} onChange={e=>setSelected(e.target.checked?new Set(records.map(item=>item.id)):new Set())}/></th><th>Record name</th><th>Type</th><th>Value/Route traffic to</th><th>TTL</th><th>Routing policy</th><th/></tr></thead><tbody>{records.map(record=><tr key={record.id}><td><input aria-label={`Select ${record.name}`} type="checkbox" checked={selected.has(record.id)} onChange={()=>select(record.id)}/></td><td><b>{record.name}</b></td><td><span className="tag">{record.type}</span></td><td className="value">{record.value}</td><td>{record.ttl}</td><td>{record.routing_policy}</td><td><button className="kebab" onClick={()=>{setEditing(record);setDialog("record")}}>Edit</button><button className="kebab delete" onClick={()=>{setEditing(record);setDialog("delete-record")}}>Delete</button></td></tr>)}</tbody></table>{!records.length&&<div className="empty large">No records match your filter.</div>}</>:<div className="empty large">Select a hosted zone to view its records.</div>}</section></div></>}</section></div>{notice&&<div className="toast">✓ {notice}</div>}{(dialog==="create-zone"||dialog==="edit-zone")&&<Modal title={dialog==="edit-zone"?"Edit hosted zone":"Create hosted zone"} close={()=>setDialog(null)}><form onSubmit={saveZone}><label>Domain name<input name="name" defaultValue={zone?.name.replace(/\.$/,"")} placeholder="example.com" required/></label><label>Comment — optional<textarea name="comment" defaultValue={dialog==="edit-zone"?zone?.comment:""}/></label><label className="checkbox"><input name="private" type="checkbox" defaultChecked={dialog==="edit-zone"&&zone?.private_zone}/> Private hosted zone</label><footer><button type="button" onClick={()=>setDialog(null)}>Cancel</button><button className="primary">{dialog==="edit-zone"?"Save changes":"Create hosted zone"}</button></footer></form></Modal>}{dialog==="record"&&<Modal title={editing?"Edit record":"Create record"} close={()=>setDialog(null)}><form onSubmit={saveRecord}><div className="form-grid"><label>Record name<input name="name" defaultValue={editing?.name||zone?.name} required/></label><label>Record type<select name="type" defaultValue={editing?.type||"A"}>{types.map(type=><option key={type}>{type}</option>)}</select></label></div><label>Value<textarea name="value" defaultValue={editing?.value} required/></label><div className="form-grid"><label>TTL (seconds)<input name="ttl" type="number" min="0" defaultValue={editing?.ttl||300}/></label><label>Routing policy<select name="policy" defaultValue={editing?.routing_policy||"Simple"}>{policies.map(policy=><option key={policy}>{policy}</option>)}</select></label></div><footer><button type="button" onClick={()=>setDialog(null)}>Cancel</button><button className="primary">{editing?"Save changes":"Create record"}</button></footer></form></Modal>}{dialog&&["delete-zone","delete-record","bulk"].includes(dialog)&&<Modal title="Confirm deletion" close={()=>setDialog(null)}><div className="confirm"><p>Are you sure you want to delete {dialog==="delete-zone"?"this hosted zone and all its records":dialog==="bulk"?`${selected.size} selected records`:"this record"}? This action cannot be undone.</p><footer><button onClick={()=>setDialog(null)}>Cancel</button><button className="destructive" onClick={remove}>Delete</button></footer></div></Modal>}</main>;
+
+import { useCallback, useEffect, useState } from "react";
+import { Login, Session } from "./components/Login";
+import { ConsoleProvider } from "./lib/console";
+import { Route, useRoute } from "./lib/router";
+import { CreateRecordView } from "./views/CreateRecordView";
+import { CreateZoneView } from "./views/CreateZoneView";
+import { DashboardView } from "./views/DashboardView";
+import { EditRecordView } from "./views/EditRecordView";
+import { EditZoneView } from "./views/EditZoneView";
+import { ImportView } from "./views/ImportView";
+import { MockView } from "./views/MockView";
+import { QueryLoggingView } from "./views/QueryLoggingView";
+import { TestRecordView } from "./views/TestRecordView";
+import { ZoneDetailView } from "./views/ZoneDetailView";
+import { ZonesView } from "./views/ZonesView";
+
+const SESSION_KEY = "r53-session";
+
+function loadSession(): Session | null {
+  try {
+    const saved = localStorage.getItem(SESSION_KEY);
+    return saved ? (JSON.parse(saved) as Session) : null;
+  } catch {
+    return null;
+  }
 }
-function Login({done}:{done:(value:string)=>void}){const[email,setEmail]=useState("demo@aws.local"),[password,setPassword]=useState(""),[error,setError]=useState("");const signIn=async(event:FormEvent)=>{event.preventDefault();if(password.length<4){setError("Enter at least 4 characters for the demo password.");return}try{const result=await fetch(api+"/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});done((await result.json()).token)}catch{setError("Unable to reach the Route 53 demo API.")}};return <div className="login"><div className="login-card"><div className="aws">aws<span>⌣</span></div><div className="route-mark">53</div><h1>Route 53</h1><p>Sign in to manage your DNS infrastructure.</p><form onSubmit={signIn}><label>Email address<input type="email" value={email} onChange={event=>setEmail(event.target.value)} required/></label><label>Demo password<input type="password" value={password} onChange={event=>setPassword(event.target.value)} placeholder="Enter any 4+ characters" required/></label>{error&&<p className="error">{error}</p>}<button className="primary wide">Sign in</button></form><small>Mocked authentication · your session persists in this browser.</small></div></div>}
-function Topbar({dark,theme,logout}:{dark:boolean;theme:()=>void;logout:()=>void}){const[regions,setRegions]=useState(false),[account,setAccount]=useState(false),[query,setQuery]=useState(""),[results,setResults]=useState<SearchResult[]>([]),[searching,setSearching]=useState(false);useEffect(()=>{const timer=setTimeout(async()=>{if(!query.trim()){setResults([]);return}setSearching(true);try{const response=await fetch(`${api}/search?q=${encodeURIComponent(query)}`,{headers:{Authorization:`Bearer ${localStorage.getItem("r53-token")}`}});setResults(response.ok?await response.json():[])}finally{setSearching(false)}},180);return()=>clearTimeout(timer)},[query]);const choose=(result:SearchResult)=>{dispatchEvent(new CustomEvent("route53-search-result",{detail:result}));setQuery("");setResults([])};return <header className="topbar"><div className="aws-logo">aws<span>⌣</span></div><span className="divider"/><b>Route 53</b><div className="console-search"><span>⌕</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search hosted zones and records" aria-label="Search hosted zones and records"/>{query&&<div className="search-results">{searching?<p>Searching…</p>:results.length?results.map((result,index)=><button key={`${result.zone_id}-${result.record_id||index}`} onClick={()=>choose(result)}><strong>{result.label}</strong><small>{result.kind} · {result.detail}</small></button>):<p>No matching Route 53 resources</p>}</div>}</div><div className="top-control region"><button className="region" onClick={()=>{setRegions(!regions);setAccount(false)}}>⌄&nbsp; Global</button>{regions&&<div className="top-menu"><button>Global — Route 53</button><button disabled>Regional services are unavailable</button></div>}</div><button className="theme" onClick={theme} aria-label="Toggle color theme">{dark?"☀":"◐"}</button><div className="top-control"><button className="account" onClick={()=>{setAccount(!account);setRegions(false)}}>demo@aws.local&nbsp;⌄</button>{account&&<div className="top-menu"><button>Account settings</button><button onClick={logout}>Sign out</button></div>}</div></header>}
-function Sidebar({active,choose}:{active:string;choose:(value:string)=>void}){const items=["Dashboard","Hosted zones","Traffic policies","Health checks","Resolver","Profiles"];return <aside><div className="side-title">Route 53</div>{items.map(item=><button key={item} className={active===item?"nav-active":""} onClick={()=>choose(item)}>{item}</button>)}<hr/><span className="side-label">Related services</span><button onClick={()=>choose("CloudWatch")}>CloudWatch</button><button onClick={()=>choose("IAM")}>IAM</button><button className="help" onClick={()=>choose("Help and support")}>▢ &nbsp; Help and support</button></aside>}
+
+export default function Page() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setSession(loadSession());
+    setReady(true);
+  }, []);
+
+  const signIn = (next: Session) => {
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+    } catch {
+      /* the session then lasts until the tab closes */
+    }
+    setSession(next);
+  };
+
+  const signOut = useCallback(() => {
+    try {
+      localStorage.removeItem(SESSION_KEY);
+    } catch {
+      /* ignore */
+    }
+    setSession(null);
+  }, []);
+
+  if (!ready) return null;
+  if (!session) return <Login onSignedIn={signIn} />;
+  return (
+    <ConsoleProvider token={session.token} user={session.user} onLogout={signOut}>
+      <Routes />
+    </ConsoleProvider>
+  );
+}
+
+function Routes() {
+  const route = useRoute();
+  return renderRoute(route);
+}
+
+function renderRoute(route: Route) {
+  switch (route.name) {
+    case "zones":
+      return <ZonesView />;
+    case "zone-create":
+      return <CreateZoneView />;
+    case "zone":
+      return <ZoneDetailView key={route.id} zoneId={route.id} tab={route.tab} record={route.record} />;
+    case "zone-edit":
+      return <EditZoneView zoneId={route.id} />;
+    case "record-create":
+      return <CreateRecordView zoneId={route.id} />;
+    case "record-edit":
+      return <EditRecordView zoneId={route.id} recordId={route.recordId} />;
+    case "import":
+      return <ImportView zoneId={route.id} />;
+    case "query-logging":
+      return <QueryLoggingView zoneId={route.id} />;
+    case "test-record":
+      return <TestRecordView zoneId={route.id} />;
+    case "dashboard":
+      return <DashboardView />;
+    case "mock":
+      return <MockView slug={route.slug} />;
+  }
+}

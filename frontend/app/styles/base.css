@@ -1,0 +1,154 @@
+/* Design tokens and element defaults. Metrics follow the AWS console (Cloudscape) at 100% zoom. */
+:root {
+  --font: "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-subtle: #f6f6f9;
+  --text: #0f141a;
+  --text-muted: #424650;
+  --text-faint: #656871;
+  --border: #c6c6cd;
+  --border-strong: #8c8c94;
+  --border-subtle: #e9ebed;
+  --input-border: #7d8998;
+  --blue: #0972d3;
+  --blue-dark: #033160;
+  --blue-tint: #f0fbff;
+  --link: #0972d3;
+  --orange: #ff9900;
+  --orange-hover: #ec7211;
+  --nav-bg: #0f1b2a;
+  --nav-border: #424650;
+  --disabled-bg: #f2f3f3;
+  --disabled-text: #9ba7b6;
+  --success: #037f0c;
+  --success-bg: #f2fcf3;
+  --error: #d91515;
+  --error-bg: #fff7f7;
+  --warning: #8d6605;
+  --warning-bg: #fffce9;
+  --info-bg: #f0fbff;
+  --shadow: 0 4px 20px rgba(0, 28, 36, 0.3);
+  --radius: 16px;
+  --radius-small: 8px;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0f1b2a;
+  --surface: #162231;
+  --surface-subtle: #1c2b3d;
+  --text: #e9ebed;
+  --text-muted: #c6c6cd;
+  --text-faint: #a4a4ad;
+  --border: #3d4a5a;
+  --border-strong: #6f7a89;
+  --border-subtle: #2a3748;
+  --input-border: #8c8c94;
+  --blue: #44b9d6;
+  --blue-dark: #89e1f5;
+  --blue-tint: #0d2a3a;
+  --link: #44b9d6;
+  --disabled-bg: #1c2b3d;
+  --disabled-text: #6f7a89;
+  --success: #2ea597;
+  --success-bg: #0b2a27;
+  --error: #ff7a7a;
+  --error-bg: #301616;
+  --warning: #fbbf24;
+  --warning-bg: #2d2610;
+  --info-bg: #0d2a3a;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--link);
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  margin: 16px 0;
+}
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--blue);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: none;
+}
+
+kbd {
+  font-family: inherit;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 5px;
+  background: var(--surface-subtle);
+}
+
+pre {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.muted {
+  color: var(--text-faint);
+}
