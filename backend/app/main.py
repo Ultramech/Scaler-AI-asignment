@@ -122,6 +122,19 @@ def login(payload: Login): return {"token": "route53-demo-session", "user": {"em
 def list_zones(q: str = "", db: Session = Depends(db_session), _: str = Depends(user)):
     zones = db.scalars(select(HostedZone).order_by(HostedZone.name)).all()
     return [zone_dict(z) for z in zones if q.lower() in z.name.lower()]
+@app.get("/search")
+def search_resources(q: str = "", db: Session = Depends(db_session), _: str = Depends(user)):
+    query = q.strip().lower()
+    if not query: return []
+    zones = db.scalars(select(HostedZone).order_by(HostedZone.name)).all()
+    results = []
+    for zone in zones:
+        if query in zone.name.lower() or query in zone.comment.lower():
+            results.append({"kind": "Hosted zone", "label": zone.name, "detail": zone.comment or ("Private" if zone.private_zone else "Public") + " hosted zone", "zone_id": zone.id})
+        for record in zone.records:
+            if query in (record.name + " " + record.type + " " + record.value + " " + record.routing_policy).lower():
+                results.append({"kind": "Record", "label": record.name, "detail": f"{record.type} · {record.value}", "zone_id": zone.id, "record_id": record.id})
+    return results[:20]
 @app.post("/zones", status_code=201)
 def create_zone(payload: ZoneInput, db: Session = Depends(db_session), _: str = Depends(user)):
     name = payload.name.rstrip(".") + "."
