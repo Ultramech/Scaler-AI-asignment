@@ -1,12 +1,22 @@
-# AWS Route 53 Console Clone
+<div align="center">
 
-A full-stack clone of the **Amazon Route 53** management console. It recreates the console's look, navigation and core workflows (hosted zones, DNS records, tables, forms, search, filters, pagination, modals and notifications) on top of a real backend API with persistent **SQLite** storage. No actual DNS is served or resolved.
+<img src="docs/banner.svg" alt="AWS Route 53 Console Clone" width="760" />
 
-| | |
-| --- | --- |
-| **Live demo** | <https://route53-clone-three-gamma.vercel.app> (sign in with any username and password) |
-| **API docs** | <https://route53-clone-api-s69g.onrender.com/docs> |
-| **Stack** | Next.js 15 (TypeScript) · FastAPI · SQLAlchemy · SQLite |
+## 🎬 Try the Live Demo
+
+<a href="https://route53-clone-three-gamma.vercel.app"><img alt="Live demo" src="https://img.shields.io/badge/%E2%96%B6%20LIVE%20DEMO-VERCEL-ff9900?style=for-the-badge&labelColor=161b22" /></a>
+<a href="https://route53-clone-api-s69g.onrender.com/docs"><img alt="API docs" src="https://img.shields.io/badge/%F0%9F%93%98%20API%20DOCS-RENDER-2ea44f?style=for-the-badge&labelColor=161b22" /></a>
+<a href="https://github.com/Ultramech/Scaler-AI-asignment"><img alt="Source code" src="https://img.shields.io/badge/%F0%9F%92%BB%20SOURCE-GITHUB-8957e5?style=for-the-badge&labelColor=161b22" /></a>
+
+</div>
+
+> **A full-stack clone of the Amazon Route 53 console.** Hosted zones, DNS records, search, filters, pagination, modals and notifications on a real **FastAPI** backend with persistent **SQLite** storage, built to look and behave like the original. **No actual DNS is served or resolved.**
+
+<div align="center">
+
+**Next.js 15 (TypeScript)** · **FastAPI** · **SQLAlchemy** · **SQLite**
+
+</div>
 
 **Trying the demo:** open the link, enter any username, press **Next**, enter any password and sign in. Authentication is mocked, so there is nothing to register. A sample `example.com` zone is there to explore; create your own zones and records freely.
 

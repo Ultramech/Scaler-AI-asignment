@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="130" viewBox="0 0 900 130" role="img" aria-label="AWS Route 53 Console Clone">
+  <rect width="900" height="130" rx="14" fill="#0d1117"/>
+  <rect x="0" y="0" width="900" height="4" rx="2" fill="#ff9900"/>
+  <text x="450" y="64" text-anchor="middle" font-family="'Trebuchet MS','Segoe UI',Helvetica,Arial,sans-serif" font-size="46" font-weight="800" letter-spacing="1" fill="#ff9900">AWS Route 53 Console Clone</text>
+  <text x="450" y="100" text-anchor="middle" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="17" letter-spacing="4" fill="#8b949e">NEXT.JS  ·  FASTAPI  ·  SQLITE</text>
+</svg>
