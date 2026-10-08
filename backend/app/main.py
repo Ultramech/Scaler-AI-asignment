@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, Header, status
+from fastapi import Depends, FastAPI, HTTPException, Header, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, create_engine, select
@@ -44,6 +44,10 @@ class RecordInput(BaseModel):
     value: str = Field(min_length=1)
     ttl: int = Field(default=300, ge=0, le=2147483647)
     routing_policy: str = "Simple"
+class ImportInput(BaseModel):
+    content: str = Field(min_length=1)
+class BulkRecordInput(BaseModel):
+    ids: list[int] = Field(min_length=1)
 
 def db_session():
     db = SessionLocal()
@@ -59,6 +63,38 @@ def zone_dict(z: HostedZone):
     return {"id": z.id, "name": z.name, "comment": z.comment, "private_zone": z.private_zone, "created_at": z.created_at, "record_count": len(z.records)}
 def record_dict(r: DNSRecord):
     return {"id": r.id, "zone_id": r.zone_id, "name": r.name, "type": r.type, "value": r.value, "ttl": r.ttl, "routing_policy": r.routing_policy}
+
+def bind_zone(zone: HostedZone):
+    lines = [f"$ORIGIN {zone.name}", "$TTL 300", f"; {zone.comment or 'Exported from Route 53 clone'}"]
+    for record in zone.records:
+        name = "@" if record.name == zone.name else record.name.removesuffix("." + zone.name.rstrip("."))
+        lines.append(f"{name:<24} {record.ttl:<6} IN {record.type:<6} {record.value}")
+    return "\n".join(lines) + "\n"
+
+def parse_bind(content: str, zone: HostedZone):
+    origin, default_ttl, records = zone.name, 300, []
+    allowed = {"A", "AAAA", "CNAME", "TXT", "MX", "NS", "PTR", "SRV", "CAA"}
+    for raw in content.splitlines():
+        line = raw.strip()
+        if not line or line.startswith(";"): continue
+        if line.upper().startswith("$ORIGIN"):
+            value = line.split(maxsplit=1)[1].rstrip(".")
+            origin = value + "."
+            continue
+        if line.upper().startswith("$TTL"):
+            try: default_ttl = int(line.split(maxsplit=1)[1])
+            except ValueError: pass
+            continue
+        parts = line.split()
+        type_index = next((i for i, value in enumerate(parts) if value.upper() in allowed), None)
+        if type_index is None: continue
+        name = parts[0]
+        ttl = next((int(value) for value in parts[1:type_index] if value.isdigit()), default_ttl)
+        value = " ".join(parts[type_index + 1:])
+        if not value: continue
+        fqdn = origin if name == "@" else (name if name.endswith(".") else f"{name}.{origin}")
+        records.append(DNSRecord(zone_id=zone.id, name=fqdn, type=parts[type_index].upper(), value=value, ttl=ttl))
+    return records
 
 def seed():
     with SessionLocal() as db:
@@ -105,6 +141,22 @@ def delete_zone(zone_id: str, db: Session = Depends(db_session), _: str = Depend
 def list_records(zone_id: str, q: str = "", db: Session = Depends(db_session), _: str = Depends(user)):
     records = db.scalars(select(DNSRecord).where(DNSRecord.zone_id == zone_id).order_by(DNSRecord.name)).all()
     return [record_dict(r) for r in records if q.lower() in (r.name + r.type + r.value).lower()]
+@app.get("/zones/{zone_id}/export")
+def export_zone(zone_id: str, format: str = "json", db: Session = Depends(db_session), _: str = Depends(user)):
+    zone = db.get(HostedZone, zone_id)
+    if not zone: raise HTTPException(404, "Hosted zone not found")
+    if format == "bind":
+        return Response(bind_zone(zone), media_type="text/plain", headers={"Content-Disposition": f'attachment; filename="{zone.name.rstrip(".")}.zone"'})
+    if format != "json": raise HTTPException(400, "format must be json or bind")
+    return {"hosted_zone": zone_dict(zone), "records": [record_dict(record) for record in zone.records]}
+@app.post("/zones/{zone_id}/records/import", status_code=201)
+def import_records(zone_id: str, payload: ImportInput, db: Session = Depends(db_session), _: str = Depends(user)):
+    zone = db.get(HostedZone, zone_id)
+    if not zone: raise HTTPException(404, "Hosted zone not found")
+    records = parse_bind(payload.content, zone)
+    if not records: raise HTTPException(400, "No supported DNS records were found in this BIND file")
+    db.add_all(records); db.commit()
+    return {"imported": len(records), "records": [record_dict(record) for record in records]}
 @app.post("/zones/{zone_id}/records", status_code=201)
 def create_record(zone_id: str, payload: RecordInput, db: Session = Depends(db_session), _: str = Depends(user)):
     if not db.get(HostedZone, zone_id): raise HTTPException(404, "Hosted zone not found")
@@ -120,3 +172,9 @@ def delete_record(record_id: int, db: Session = Depends(db_session), _: str = De
     r = db.get(DNSRecord, record_id)
     if not r: raise HTTPException(404, "Record not found")
     db.delete(r); db.commit()
+@app.delete("/zones/{zone_id}/records", status_code=204)
+def bulk_delete_records(zone_id: str, payload: BulkRecordInput, db: Session = Depends(db_session), _: str = Depends(user)):
+    records = db.scalars(select(DNSRecord).where(DNSRecord.zone_id == zone_id, DNSRecord.id.in_(payload.ids))).all()
+    if len(records) != len(set(payload.ids)): raise HTTPException(404, "One or more records were not found in this hosted zone")
+    for record in records: db.delete(record)
+    db.commit()
