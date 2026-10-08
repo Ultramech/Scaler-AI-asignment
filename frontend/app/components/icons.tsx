@@ -167,11 +167,11 @@ export const ThumbsDownIcon = (props: IconProps) => (
   </Svg>
 );
 
-/** The "aws" wordmark with its smile, drawn in SVG so it scales with the top bar. */
-export function AwsLogo() {
+/** The "aws" wordmark with its smile, drawn in SVG so it scales. `dark` is for light backgrounds. */
+export function AwsLogo({ dark = false, width = 38 }: { dark?: boolean; width?: number }) {
   return (
-    <svg width="38" height="23" viewBox="0 0 38 23" aria-label="AWS" role="img">
-      <text x="0" y="14" fill="#ffffff" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="17" letterSpacing="-0.5">aws</text>
+    <svg width={width} height={(width * 23) / 38} viewBox="0 0 38 23" aria-label="AWS" role="img">
+      <text x="0" y="14" fill={dark ? "#252f3e" : "#ffffff"} fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="17" letterSpacing="-0.5">aws</text>
       <path d="M2 17.5c8 4.2 18 4.4 27.5-.4" stroke="#ff9900" strokeWidth="2" fill="none" strokeLinecap="round" />
       <path d="M27 14.6l3.7 2.2-4 1.7z" fill="#ff9900" />
     </svg>
