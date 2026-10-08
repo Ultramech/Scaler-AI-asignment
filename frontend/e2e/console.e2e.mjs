@@ -34,6 +34,7 @@ async function step(name, fn) {
 const flash = (text) => page.locator(".flashbar .alert", { hasText: text }).first();
 const hash = () => page.evaluate(() => location.hash);
 const text = async (sel) => (await page.locator(sel).first().innerText()).replace(/\s+/g, " ").trim();
+const rowsEqual = (n) => page.waitForFunction((count) => document.querySelectorAll("tbody tr").length === count, n);
 const recordsCount = async () => Number((await text(".records-card .container-header h2")).match(/\((\d+)(?:\/\d+)?\)/)[1]);
 
 console.log("Auth");
@@ -290,20 +291,19 @@ await step("editing the protected NS record only allows value/TTL", async () => 
   await page.getByRole("button", { name: "Cancel" }).click();
 });
 await step("filter by text, type, routing policy and alias", async () => {
+  await page.locator("tbody tr").first().waitFor();
   await page.locator("thead input[type=checkbox]").check(); await page.locator("thead input[type=checkbox]").uncheck();
   await page.getByPlaceholder("Filter records by property or value").fill("198.51.100.99");
-  await page.waitForTimeout(500);
-  assert.equal((await page.locator("tbody tr").count()), 1);
+  await rowsEqual(1);
   await page.getByPlaceholder("Filter records by property or value").fill("");
-  await page.waitForTimeout(500);
   await page.getByLabel("Type", { exact: true }).selectOption("TXT");
-  assert.equal((await page.locator("tbody tr").count()), 1);
+  await rowsEqual(1);
   await page.getByLabel("Type", { exact: true }).selectOption("");
   await page.getByLabel("Routing policy").selectOption("Weighted");
-  assert.match(await text("tbody"), /api\.e2e-test\.com/); assert.equal(await page.locator("tbody tr").count(), 1);
+  await rowsEqual(1); assert.match(await text("tbody"), /api\.e2e-test\.com/);
   await page.getByLabel("Routing policy").selectOption("");
   await page.getByLabel("Alias", { exact: true }).selectOption("Yes");
-  assert.equal(await page.locator("tbody tr").count(), 1);
+  await rowsEqual(1);
   await page.getByLabel("Alias", { exact: true }).selectOption("");
 });
 await step("sorting by record name toggles order", async () => {
@@ -510,7 +510,7 @@ await step("sidebar placeholders show Coming soon; Dashboard works", async () =>
   await page.getByText("Coming soon").waitFor();
   await page.getByRole("link", { name: "Dashboard" }).click();
   await page.getByRole("heading", { name: /Route 53 Dashboard/ }).waitFor();
-  assert.match(await text(".summary"), /DNS management \d+ Hosted zones?/);
+  await page.waitForFunction(() => /DNS management \d+ Hosted zones?/.test(document.querySelector(".summary")?.textContent?.replace(/\s+/g, " ") ?? ""));
   await page.getByRole("link", { name: "Hosted zones", exact: true }).first().click();
 });
 await step("browser back/forward follows the hash routes", async () => {
@@ -588,18 +588,18 @@ await step("zone list paginates: 12 zones, 10 per page", async () => {
     for (let i = 1; i <= 12; i++) await fetch(`${api}/zones`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer route53-demo-session" }, body: JSON.stringify({ name: `page-${String(i).padStart(2, "0")}.example` }) });
   }, API);
   await page.reload(); await page.getByRole("heading", { name: /Hosted zones/ }).waitFor();
+  await page.locator("tbody tr").first().waitFor();
   await page.getByRole("button", { name: "Preferences", exact: true }).click();
   await page.getByRole("dialog").getByLabel("10 items").check();
   await page.getByRole("button", { name: "Confirm" }).click();
-  assert.equal(await page.locator("tbody tr").count(), 10);
+  await page.waitForFunction(() => document.querySelectorAll("tbody tr").length === 10);
   await page.getByRole("button", { name: "Next page" }).click();
-  assert.ok((await page.locator("tbody tr").count()) >= 3);
+  await page.waitForFunction(() => document.querySelectorAll("tbody tr").length >= 3);
   assert.equal(await page.getByRole("button", { name: "Next page" }).isDisabled(), true);
   await page.getByRole("button", { name: "Previous page" }).click();
-  assert.equal(await page.locator("tbody tr").count(), 10);
+  await rowsEqual(10);
   await page.getByPlaceholder("Filter records by property or value").fill("page-12");
-  await page.waitForTimeout(500);
-  assert.equal(await page.locator("tbody tr").count(), 1);
+  await rowsEqual(1);
   await page.getByPlaceholder("Filter records by property or value").fill("");
   await page.getByRole("button", { name: "Preferences", exact: true }).click();
   await page.getByRole("dialog").getByLabel("100 items").check();

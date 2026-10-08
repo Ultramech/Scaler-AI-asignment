@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response, 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from . import dns
 from .db import Base, SessionLocal, engine, get_db, migrate
@@ -214,7 +214,8 @@ async def dns_validation_handler(_: Request, error: dns.DNSValidationError):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    # RENDER_GIT_COMMIT is set by Render; it shows which revision is serving traffic.
+    return {"status": "ok", "commit": os.getenv("RENDER_GIT_COMMIT", "")[:7]}
 
 
 @app.post("/auth/login")
@@ -227,7 +228,10 @@ def login(payload: LoginInput):
 @app.get("/zones")
 def list_zones(q: str = "", db: Session = Depends(get_db), _: str = Depends(current_user)):
     needle = q.strip().lower()
-    zones = db.scalars(select(HostedZone).order_by(HostedZone.name)).all()
+    # Load tags and records in two extra queries instead of two per zone.
+    zones = db.scalars(
+        select(HostedZone).options(selectinload(HostedZone.tags), selectinload(HostedZone.records)).order_by(HostedZone.name)
+    ).all()
 
     def matches(zone: HostedZone) -> bool:
         haystack = " ".join(
@@ -525,7 +529,8 @@ def search_resources(q: str = "", db: Session = Depends(get_db), _: str = Depend
     if not query:
         return []
     results = []
-    for zone in db.scalars(select(HostedZone).order_by(HostedZone.name)).all():
+    zones = db.scalars(select(HostedZone).options(selectinload(HostedZone.records)).order_by(HostedZone.name)).all()
+    for zone in zones:
         if query in zone.name.lower() or query in zone.comment.lower():
             kind = "Private" if zone.private_zone else "Public"
             results.append({"kind": "Hosted zone", "label": zone.name.rstrip("."), "detail": zone.comment or f"{kind} hosted zone", "zone_id": zone.id})
