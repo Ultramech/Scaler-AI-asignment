@@ -1,0 +1,11 @@
+# JavaScript
+frontend/node_modules/
+frontend/.next/
+
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/app/__pycache__/
+
+# Runtime data
+backend/route53.db
