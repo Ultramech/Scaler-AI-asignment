@@ -8,7 +8,9 @@ A full-stack clone of the **Amazon Route 53** management console. It recreates t
 | **API docs** | <https://route53-clone-api-s69g.onrender.com/docs> |
 | **Stack** | Next.js 15 (TypeScript) · FastAPI · SQLAlchemy · SQLite |
 
-> **Demo note.** The API runs on Render's free tier, whose disk is reset on restart and which sleeps when idle. A scheduled GitHub Action pings it every 10 minutes to keep it awake, but records created on the hosted demo are not guaranteed to survive a redeploy. Run it locally (below) for durable data.
+**Trying the demo:** open the link, enter any username, press **Next**, enter any password and sign in. Authentication is mocked, so there is nothing to register. A sample `example.com` zone is there to explore; create your own zones and records freely.
+
+> **About data on the hosted demo.** The app stores everything in SQLite and keeps it for as long as the database file exists (see [Data persistence](#data-persistence)). The hosted API runs on Render's free tier, whose disk is wiped whenever the server restarts or redeploys, after which only the sample zone is back. A scheduled GitHub Action keeps the server awake, which makes this rare, but treat data on the hosted demo as temporary. Run the app locally for durable data.
 
 ![Hosted zone details](docs/screenshots/03-hosted-zone-details.png)
 
@@ -33,6 +35,7 @@ A full-stack clone of the **Amazon Route 53** management console. It recreates t
 - [Configuration](#configuration)
 - [Architecture](#architecture)
 - [Database schema](#database-schema)
+- [Data persistence](#data-persistence)
 - [API overview](#api-overview)
 - [Testing](#testing)
 - [Deployment](#deployment)
@@ -186,6 +189,17 @@ erDiagram
 
 Deleting a hosted zone cascades to its records and tags. Columns added after the first release are added to existing databases at startup (`db.migrate`), so upgrading never requires deleting `route53.db`.
 
+## Data persistence
+
+Every piece of state lives in one SQLite file, `backend/route53.db` (override with `ROUTE53_DATABASE_URL`): hosted zones, records, tags and the DNSSEC, accelerated-recovery and query-logging settings. The file is created on first start, an `example.com` sample zone is seeded only when the database is empty, and restarting the API never deletes anything. This was checked by creating a zone with a tag and a record, stopping the server, restarting it on the same file, and reading all of it back.
+
+| Where it runs | Persistence |
+| --- | --- |
+| **Local** (`uvicorn` + `npm run dev`) | Durable: the SQLite file stays on your disk across restarts. |
+| **Hosted demo** (Render free tier) | Temporary: the host wipes its disk on restart or redeploy. A keep-alive job makes restarts rare. |
+
+For a hosted deployment that keeps its data, run the API on a host with a persistent disk and set `ROUTE53_DATABASE_URL` to a path on it, for example `sqlite:////data/route53.db` (on Render this needs a paid plan with a disk). No code changes are needed.
+
 ## API overview
 
 All endpoints except `/health` and `/auth/login` need `Authorization: Bearer route53-demo-session`. Errors are returned as `{"detail": "message"}`. Full interactive docs: `/docs`.
@@ -223,7 +237,7 @@ cd frontend && npx tsc --noEmit && npm run build
 cd frontend && npx playwright install chromium && npm run e2e
 ```
 
-The API suite covers authentication, zone and record CRUD, validation and conflict errors, protected records, batch rollback, bulk operations, import/export, DNSSEC, query logging and test-record. The browser suite (about 55 steps) covers sign-in/out, every page and dialog, filtering, sorting, pagination, preferences, import/export, keyboard shortcuts, dark mode and deletion. It can also run against a deployment: `BASE=<frontend url> API=<api url> npm run e2e`.
+The API suite covers authentication, zone and record CRUD, validation and conflict errors, protected records, batch rollback, bulk operations, import/export, DNSSEC, query logging and test-record. The browser suite (54 steps) covers sign-in/out, every page and dialog, filtering, sorting, pagination, preferences, import/export, keyboard shortcuts, dark mode and deletion. It can also run against a deployment: `BASE=<frontend url> API=<api url> npm run e2e`.
 
 ## Deployment
 
@@ -240,4 +254,4 @@ For durable data in production, run the API on a host with a persistent disk and
 - **A small, direct data model.** Three tables map straight to SQLAlchemy models; multi-value records keep one value per line so an edit stays a single row.
 - **Validation lives on the server** (`dns.py`) and is mirrored in the forms for fast feedback.
 - **Alias targets.** The endpoint-type dropdown in the alias form only changes the placeholder; the target is stored as a plain DNS name.
-- **Hosted demo persistence.** See the note at the top: free-tier hosting means the demo's data is not durable.
+- **Hosted demo persistence.** The code persists everything in SQLite; only the free hosting tier is temporary. See [Data persistence](#data-persistence).
