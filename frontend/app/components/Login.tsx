@@ -49,7 +49,7 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
   return (
     <div className="signin-page">
       <header className="signin-logo">
-        <AwsLogo dark width={190} />
+        <AwsLogo dark width={150} />
       </header>
       <div className="signin-layout">
         <section className="signin-card" aria-labelledby="signin-title">

@@ -132,7 +132,7 @@ function Topbar() {
   return (
     <header className="topbar">
       <button type="button" className="topbar-logo" aria-label="AWS Management Console home" onClick={() => go(paths.zones())}>
-        <AwsLogo />
+        <AwsLogo width={46} />
       </button>
       <button type="button" className="topbar-icon topbar-q" aria-label="Amazon Q" onClick={() => unavailable("Amazon Q")}>
         <span />
