@@ -83,12 +83,6 @@ await step("preferences: hide a column and change page size, persisted after rel
   await page.getByRole("dialog").getByRole("switch", { name: "Description" }).check({ force: true });
   await page.getByRole("dialog").getByLabel("100 items").check();
   await page.getByRole("button", { name: "Confirm" }).click();
-  // clean up the zones this step created so the test can run against a shared deployment
-  await page.evaluate(async (api) => {
-    const headers = { Authorization: "Bearer route53-demo-session" };
-    const zones = await (await fetch(`${api}/zones?q=page-`, { headers })).json();
-    for (const zone of zones) await fetch(`${api}/zones/${zone.id}`, { method: "DELETE", headers });
-  }, API);
 });
 
 console.log("Create hosted zone");
@@ -605,6 +599,12 @@ await step("zone list paginates: 12 zones, 10 per page", async () => {
   await page.getByRole("button", { name: "Preferences", exact: true }).click();
   await page.getByRole("dialog").getByLabel("100 items").check();
   await page.getByRole("button", { name: "Confirm" }).click();
+  // clean up the zones this step created so the test can run against a shared deployment
+  await page.evaluate(async (api) => {
+    const headers = { Authorization: "Bearer route53-demo-session" };
+    const zones = await (await fetch(`${api}/zones?q=page-`, { headers })).json();
+    for (const zone of zones) await fetch(`${api}/zones/${zone.id}`, { method: "DELETE", headers });
+  }, API);
 });
 await step("sign out returns to the login screen", async () => {
   await page.locator(".account-button").click();
