@@ -535,6 +535,23 @@ await step("details panel toggles and can be moved to the bottom", async () => {
   await page.getByRole("button", { name: "Confirm" }).click();
   await page.getByRole("button", { name: "Close panel" }).click();
 });
+await step("account menu works at human click speed (mouse held 300 ms)", async () => {
+  // Regression: the menu used to close on blur, which swallowed slow clicks on its items.
+  const slowClick = async (locator) => {
+    const box = await locator.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down(); await page.waitForTimeout(300); await page.mouse.up();
+  };
+  await page.locator(".account-button").click();
+  await slowClick(page.getByRole("menuitem", { name: "Switch to dark mode" }));
+  await page.waitForFunction(() => document.documentElement.dataset.theme === "dark");
+  await page.locator(".account-button").click();
+  await slowClick(page.getByRole("menuitem", { name: "Switch to light mode" }));
+  await page.waitForFunction(() => document.documentElement.dataset.theme === "light");
+  await page.locator(".account-button").click();
+  await page.keyboard.press("Escape");
+  assert.equal(await page.locator(".account-menu").count(), 0);
+});
 await step("dark mode persists across reload", async () => {
   await page.locator(".account-button").click();
   await page.getByRole("menuitem", { name: "Switch to dark mode" }).click();

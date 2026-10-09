@@ -87,6 +87,7 @@ function Topbar() {
   const [account, setAccount] = useState(false);
   const [shortcuts, setShortcuts] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const accountRef = useRef<HTMLDivElement>(null);
   const debounced = useDebounced(query, 200);
 
   useEffect(() => {
@@ -122,6 +123,23 @@ function Topbar() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
+
+  // Close the account menu on an outside click or Escape. (Closing on blur would race with the click on a menu item.)
+  useEffect(() => {
+    if (!account) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!accountRef.current?.contains(event.target as Node)) setAccount(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccount(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [account]);
 
   const choose = (result: SearchResult) => {
     setQuery("");
@@ -182,8 +200,8 @@ function Topbar() {
       <button type="button" className="topbar-icon" aria-label="Support" onClick={() => unavailable("Support")}>
         <HelpCircleIcon size={18} />
       </button>
-      <div className="account">
-        <button type="button" className="account-button" aria-haspopup="menu" aria-expanded={account} onClick={() => setAccount(!account)} onBlur={() => setTimeout(() => setAccount(false), 120)}>
+      <div className="account" ref={accountRef}>
+        <button type="button" className="account-button" aria-haspopup="menu" aria-expanded={account} onClick={() => setAccount(!account)}>
           <span>
             Demo account <TriangleDownIcon size={8} />
           </span>
@@ -195,13 +213,13 @@ function Topbar() {
               <strong>{user.name}</strong>
               <small>{user.email}</small>
             </p>
-            <button type="button" role="menuitem" onClick={() => setShortcuts(true)}>
+            <button type="button" role="menuitem" onClick={() => { setAccount(false); setShortcuts(true); }}>
               Keyboard shortcuts
             </button>
-            <button type="button" role="menuitem" onClick={toggleTheme}>
+            <button type="button" role="menuitem" onClick={() => { setAccount(false); toggleTheme(); }}>
               {dark ? "Switch to light mode" : "Switch to dark mode"}
             </button>
-            <button type="button" role="menuitem" onClick={logout}>
+            <button type="button" role="menuitem" onClick={() => { setAccount(false); logout(); }}>
               Sign out
             </button>
           </div>
