@@ -377,6 +377,10 @@ await step("? opens the shortcuts dialog, Esc closes it", async () => {
   await page.keyboard.press("?");
   await page.getByRole("dialog", { name: "Keyboard shortcuts" }).waitFor();
   assert.match(await text(".shortcuts"), /Focus the global search/);
+  // Regression: the dialog once inherited the top bar's white text, invisible on white in light mode.
+  const textColor = await page.getByRole("dialog", { name: "Keyboard shortcuts" }).locator("h2").evaluate((el) => getComputedStyle(el).color);
+  const [red, green, blue] = textColor.match(/\d+/g).map(Number);
+  assert.ok(0.2126 * red + 0.7152 * green + 0.0722 * blue < 100, `dialog text should be dark in light mode, got ${textColor}`);
   await page.keyboard.press("Escape");
   assert.equal(await page.getByRole("dialog").count(), 0);
   await page.locator(".account-button").click();

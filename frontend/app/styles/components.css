@@ -990,6 +990,7 @@ fieldset legend {
 }
 
 .modal {
+  color: var(--text);
   width: 100%;
   max-height: calc(100vh - 48px);
   display: flex;

@@ -148,85 +148,87 @@ function Topbar() {
   };
 
   return (
-    <header className="topbar">
-      <button type="button" className="topbar-logo" aria-label="AWS Management Console home" onClick={() => go(paths.zones())}>
-        <AwsLogo width={46} />
-      </button>
-      <button type="button" className="topbar-icon topbar-q" aria-label="Amazon Q" onClick={() => unavailable("Amazon Q")}>
-        <span />
-      </button>
-      <button type="button" className="topbar-icon" aria-label="Services" onClick={() => unavailable("The services menu")}>
-        <GridIcon size={20} />
-      </button>
-      <div className="topbar-search" role="search">
-        <SearchIcon size={16} />
-        <input
-          ref={input}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") setQuery("");
-            if (event.key === "Enter" && results[0]) choose(results[0]);
-          }}
-          placeholder="Search"
-          aria-label="Search hosted zones and records"
-        />
-        <kbd>[Alt+S]</kbd>
-        <span className="search-badge" aria-hidden="true" />
-        {query.trim() && (
-          <div className="search-results" role="listbox">
-            {results.length ? (
-              results.map((result, index) => (
-                <button type="button" role="option" aria-selected={false} key={`${result.zone_id}-${result.record_id ?? "zone"}-${index}`} onClick={() => choose(result)}>
-                  <strong>{result.label}</strong>
-                  <small>
-                    {result.kind} · {result.detail}
-                  </small>
-                </button>
-              ))
-            ) : (
-              <p>{searching ? "Searching…" : "No matching Route 53 resources"}</p>
-            )}
-          </div>
-        )}
-      </div>
-      <div className="topbar-spacer" />
-      <button type="button" className="topbar-icon" aria-label="CloudShell" onClick={() => unavailable("CloudShell")}>
-        <TerminalIcon size={18} />
-      </button>
-      <button type="button" className="topbar-icon" aria-label="Notifications" onClick={() => unavailable("Notifications")}>
-        <BellIcon size={18} />
-      </button>
-      <button type="button" className="topbar-icon" aria-label="Support" onClick={() => unavailable("Support")}>
-        <HelpCircleIcon size={18} />
-      </button>
-      <div className="account" ref={accountRef}>
-        <button type="button" className="account-button" aria-haspopup="menu" aria-expanded={account} onClick={() => setAccount(!account)}>
-          <span>
-            Demo account <TriangleDownIcon size={8} />
-          </span>
-          <small>{user.name}</small>
+    <>
+      <header className="topbar">
+        <button type="button" className="topbar-logo" aria-label="AWS Management Console home" onClick={() => go(paths.zones())}>
+          <AwsLogo width={46} />
         </button>
-        {account && (
-          <div className="account-menu" role="menu">
-            <p>
-              <strong>{user.name}</strong>
-              <small>{user.email}</small>
-            </p>
-            <button type="button" role="menuitem" onClick={() => { setAccount(false); setShortcuts(true); }}>
-              Keyboard shortcuts
-            </button>
-            <button type="button" role="menuitem" onClick={() => { setAccount(false); toggleTheme(); }}>
-              {dark ? "Switch to light mode" : "Switch to dark mode"}
-            </button>
-            <button type="button" role="menuitem" onClick={() => { setAccount(false); logout(); }}>
-              Sign out
-            </button>
-          </div>
-        )}
-      </div>
+        <button type="button" className="topbar-icon topbar-q" aria-label="Amazon Q" onClick={() => unavailable("Amazon Q")}>
+          <span />
+        </button>
+        <button type="button" className="topbar-icon" aria-label="Services" onClick={() => unavailable("The services menu")}>
+          <GridIcon size={20} />
+        </button>
+        <div className="topbar-search" role="search">
+          <SearchIcon size={16} />
+          <input
+            ref={input}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setQuery("");
+              if (event.key === "Enter" && results[0]) choose(results[0]);
+            }}
+            placeholder="Search"
+            aria-label="Search hosted zones and records"
+          />
+          <kbd>[Alt+S]</kbd>
+          <span className="search-badge" aria-hidden="true" />
+          {query.trim() && (
+            <div className="search-results" role="listbox">
+              {results.length ? (
+                results.map((result, index) => (
+                  <button type="button" role="option" aria-selected={false} key={`${result.zone_id}-${result.record_id ?? "zone"}-${index}`} onClick={() => choose(result)}>
+                    <strong>{result.label}</strong>
+                    <small>
+                      {result.kind} · {result.detail}
+                    </small>
+                  </button>
+                ))
+              ) : (
+                <p>{searching ? "Searching…" : "No matching Route 53 resources"}</p>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="topbar-spacer" />
+        <button type="button" className="topbar-icon" aria-label="CloudShell" onClick={() => unavailable("CloudShell")}>
+          <TerminalIcon size={18} />
+        </button>
+        <button type="button" className="topbar-icon" aria-label="Notifications" onClick={() => unavailable("Notifications")}>
+          <BellIcon size={18} />
+        </button>
+        <button type="button" className="topbar-icon" aria-label="Support" onClick={() => unavailable("Support")}>
+          <HelpCircleIcon size={18} />
+        </button>
+        <div className="account" ref={accountRef}>
+          <button type="button" className="account-button" aria-haspopup="menu" aria-expanded={account} onClick={() => setAccount(!account)}>
+            <span>
+              Demo account <TriangleDownIcon size={8} />
+            </span>
+            <small>{user.name}</small>
+          </button>
+          {account && (
+            <div className="account-menu" role="menu">
+              <p>
+                <strong>{user.name}</strong>
+                <small>{user.email}</small>
+              </p>
+              <button type="button" role="menuitem" onClick={() => { setAccount(false); setShortcuts(true); }}>
+                Keyboard shortcuts
+              </button>
+              <button type="button" role="menuitem" onClick={() => { setAccount(false); toggleTheme(); }}>
+                {dark ? "Switch to light mode" : "Switch to dark mode"}
+              </button>
+              <button type="button" role="menuitem" onClick={() => { setAccount(false); logout(); }}>
+                Sign out
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
       {shortcuts && <ShortcutsModal onClose={() => setShortcuts(false)} />}
-    </header>
+    </>
   );
 }
 
