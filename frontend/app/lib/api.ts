@@ -9,7 +9,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * Wakes a sleeping API (free hosting stops it when idle and the first request can take a minute) by polling
  * /health until it answers. `onSlow` fires if that takes more than a few seconds, so the UI can explain the wait.
  */
-export async function wakeApi(onSlow?: () => void, maxMs = IS_LOCAL_API ? 4000 : 180_000): Promise<boolean> {
+export async function wakeApi(onSlow?: () => void, maxMs = IS_LOCAL_API ? 4000 : 180_000, onAttempt?: (detail: string) => void): Promise<boolean> {
   const started = Date.now();
   const slowTimer = setTimeout(() => onSlow?.(), 3000);
   try {
@@ -19,8 +19,10 @@ export async function wakeApi(onSlow?: () => void, maxMs = IS_LOCAL_API ? 4000 :
       try {
         const response = await fetch(`${API_URL}/health`, { cache: "no-store", signal: controller.signal });
         if (response.ok) return true;
-      } catch {
-        /* still starting up */
+        onAttempt?.(`the server answered ${response.status}`);
+      } catch (error) {
+        // Still starting up, or the browser could not reach the server at all.
+        onAttempt?.(controller.signal.aborted ? "no answer after 15 seconds" : `network error (${error instanceof Error ? error.message : "unknown"})`);
       } finally {
         clearTimeout(abort);
       }

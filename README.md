@@ -115,7 +115,8 @@ Open <http://localhost:3000> and sign in with any email address and password. In
 
 | Variable | Where | Default | Purpose |
 | --- | --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | frontend (build time) | `http://localhost:8000` | URL of the API |
+| `NEXT_PUBLIC_API_URL` | frontend (build time) | `http://localhost:8000` | URL the browser calls. The Vercel deployment sets it to `/api` (same origin, see below) |
+| `API_PROXY_TARGET` | frontend (build time) | none | When set, `/api/*` is forwarded to this API URL on the server (`next.config.mjs`) |
 | `ROUTE53_DATABASE_URL` | backend | `sqlite:///./route53.db` | SQLite file location |
 | `ROUTE53_CORS_ORIGINS` | backend | `http://localhost:3000,http://127.0.0.1:3000` | Comma-separated browser origins allowed to call the API |
 | `ROUTE53_CORS_ORIGIN_REGEX` | backend | none | Regex for origins that change per deployment, e.g. `https://.*\.vercel\.app` |
@@ -133,7 +134,7 @@ flowchart LR
         M["SQLAlchemy models"]
     end
     DB[("SQLite")]
-    UI -- "JSON over HTTPS<br/>Bearer demo token" --> R
+    UI -- "JSON over HTTPS<br/>Bearer demo token<br/>(via /api rewrite on Vercel)" --> R
     R --> D
     R --> M --> DB
 ```
@@ -251,7 +252,7 @@ The API suite covers authentication, zone and record CRUD, validation and confli
 
 ## Deployment
 
-- **Frontend:** Vercel. Set `NEXT_PUBLIC_API_URL` to the API URL and deploy the `frontend/` directory.
+- **Frontend:** Vercel. Set `NEXT_PUBLIC_API_URL=/api` and `API_PROXY_TARGET=<API url>` and deploy the `frontend/` directory. The browser only ever talks to the Vercel address; `next.config.mjs` forwards `/api/*` to the API, so there are no cross-site requests (no CORS, and nothing for an extension or network to block).
 - **API:** Render, defined by [`render.yaml`](render.yaml) (a blueprint for `backend/`). It sets `ROUTE53_CORS_ORIGIN_REGEX` so any `*.vercel.app` frontend may call it.
 - **Keep-alive:** [`.github/workflows/keep-alive.yml`](.github/workflows/keep-alive.yml) pings `/health` every 5 minutes (best effort). The frontend also wakes a sleeping API itself (`wakeApi` in `frontend/app/lib/api.ts`), retries requests while it starts, and tells the user what is happening.
 

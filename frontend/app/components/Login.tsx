@@ -101,11 +101,12 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
   const [multiSession, setMultiSession] = useState(false);
   const [busy, setBusy] = useState(false);
   const [waking, setWaking] = useState(false);
+  const [lastCheck, setLastCheck] = useState("");
 
   // Start waking the API as soon as the page opens, so it is usually ready by the time someone signs in.
   useEffect(() => {
     let active = true;
-    wakeApi(() => active && !IS_LOCAL_API && setWaking(true)).then(() => active && setWaking(false));
+    wakeApi(() => active && !IS_LOCAL_API && setWaking(true), undefined, (detail) => active && setLastCheck(detail)).then(() => active && setWaking(false));
     return () => {
       active = false;
     };
@@ -134,7 +135,7 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
     setBusy(true);
     setError("");
     try {
-      if (!(await wakeApi(() => !IS_LOCAL_API && setWaking(true)))) throw new Error("API unavailable");
+      if (!(await wakeApi(() => !IS_LOCAL_API && setWaking(true), undefined, setLastCheck))) throw new Error("API unavailable");
       setWaking(false);
       const response = await fetch(`${API_URL}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: identity }) });
       if (!response.ok) throw new Error();
@@ -281,6 +282,7 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
           {waking && (
             <Alert type="info" header="Waking up the demo server" className="signin-notice">
               It runs on free hosting that sleeps when idle, so the first sign-in can take up to a minute. You can keep going; this page continues automatically.
+              {lastCheck && <small className="signin-diagnostic">Latest check: {lastCheck}.</small>}
             </Alert>
           )}
           <div className="signin-or">
