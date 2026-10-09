@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { wakeApi } from "./lib/api";
+import { IS_LOCAL_API, wakeApi } from "./lib/api";
 import { Login, Session } from "./components/Login";
 import { ConsoleProvider, useConsole } from "./lib/console";
 import { Route, useRoute } from "./lib/router";
@@ -71,7 +71,7 @@ function WakeNotice() {
     let id: number | null = null;
     let active = true;
     wakeApi(() => {
-      if (active) id = notify({ type: "info", header: "Waking up the demo server", content: "It runs on free hosting that sleeps when idle, so this can take up to a minute." });
+      if (active && !IS_LOCAL_API) id = notify({ type: "info", header: "Waking up the demo server", content: "It runs on free hosting that sleeps when idle, so this can take up to a minute." });
     }).then(() => {
       if (id !== null) dismiss(id);
     });

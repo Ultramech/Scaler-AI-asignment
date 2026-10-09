@@ -1,12 +1,15 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+/** A local API is either running or it isn't: there is no free-tier sleep to wait out, so don't wait long. */
+export const IS_LOCAL_API = /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(API_URL);
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Wakes a sleeping API (free hosting stops it when idle and the first request can take a minute) by polling
  * /health until it answers. `onSlow` fires if that takes more than a few seconds, so the UI can explain the wait.
  */
-export async function wakeApi(onSlow?: () => void, maxMs = 120_000): Promise<boolean> {
+export async function wakeApi(onSlow?: () => void, maxMs = IS_LOCAL_API ? 4000 : 180_000): Promise<boolean> {
   const started = Date.now();
   const slowTimer = setTimeout(() => onSlow?.(), 3000);
   try {
@@ -74,9 +77,9 @@ export function createApi(token: string | null, onUnauthorized: () => void) {
       }
       const starting = response === null || [502, 503, 504].includes(response.status);
       if (!starting) break;
-      if (attempt < 2) await wakeApi(undefined, 60_000);
+      if (attempt < 2) await wakeApi(undefined, IS_LOCAL_API ? 2000 : 60_000);
     }
-    if (!response) throw new ApiError("Unable to reach the Route 53 API. If it was idle, wait a few seconds and try again.", 0);
+    if (!response) throw new ApiError(IS_LOCAL_API ? `Unable to reach the API at ${API_URL}. Start the backend (cd backend && uvicorn app.main:app --port 8000).` : "Unable to reach the Route 53 API. If it was idle, wait a few seconds and try again.", 0);
     if (response.status === 401) onUnauthorized();
     if (!response.ok) {
       const payload = await response.json().catch(() => ({ detail: "Request failed" }));
