@@ -18,7 +18,7 @@
 
 </div>
 
-**Trying the demo:** open the link, enter any username, press **Next**, enter any password and sign in. Authentication is mocked, so there is nothing to register. A sample `example.com` zone is there to explore; create your own zones and records freely.
+**Trying the demo:** open the link, enter any email address (for example `me@example.com`), press **Next**, enter any password and sign in. To try the other flow, choose **IAM user** and enter any account ID, then any username and password. Authentication is mocked, so there is nothing to register. A sample `example.com` zone is there to explore; create your own zones and records freely.
 
 > **About data on the hosted demo.** The app stores everything in SQLite and keeps it for as long as the database file exists (see [Data persistence](#data-persistence)). The hosted API runs on Render's free tier, whose disk is wiped whenever the server restarts or redeploys, after which only the sample zone is back. A scheduled GitHub Action keeps the server awake, which makes this rare, but treat data on the hosted demo as temporary. Run the app locally for durable data.
 
@@ -56,7 +56,7 @@
 | Requirement | Status | Where |
 | --- | --- | --- |
 | Next.js (TypeScript) frontend, FastAPI backend, SQLite database | Done | `frontend/`, `backend/` |
-| Mocked authentication: login, logout, session persistence | Done | Sign-in page, account menu → *Sign out*, session kept in `localStorage` |
+| Mocked authentication: login, logout, session persistence | Done | AWS-style sign-in page (root and IAM user flows), account menu → *Sign out*, session kept in `localStorage` |
 | **Hosted zones**: view, search, create, edit, delete | Done | Hosted zones list, create/edit pages, delete confirmation |
 | **DNS records**: view, search, create, edit, delete | Done | Hosted zone page → *Records* tab, create/edit record pages |
 | Record types A, AAAA, CNAME, TXT, MX, NS, PTR, SRV, CAA | Done | Per-type validation in `backend/app/dns.py` |
@@ -73,7 +73,7 @@
 
 ## Features
 
-**Authentication (mocked).** A sign-in page modelled on the AWS one (root/IAM user type, username, then password). Any credentials are accepted: IAM, accounts and billing are intentionally mocked. The session survives reloads and *Sign out* clears it.
+**Authentication (mocked).** A sign-in page modelled on the real AWS one: root user (email address, then password) or IAM user (account ID or alias, then username and password), with the feedback, multi-session and language links, the cube background and the promo panel. Any credentials are accepted: IAM, accounts and billing are intentionally mocked. The session survives reloads and *Sign out* clears it.
 
 **Hosted zones**
 - Table with search, sortable and resizable columns, pagination, single selection, and a *Preferences* dialog (page size, wrap lines, search mode, visible columns).
@@ -109,7 +109,7 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:3000> and sign in with any username and password. Interactive API docs are at <http://localhost:8000/docs>. On first start the API creates the database and seeds an `example.com` zone so there is something to explore.
+Open <http://localhost:3000> and sign in with any email address and password. Interactive API docs are at <http://localhost:8000/docs>. On first start the API creates the database and seeds an `example.com` zone so there is something to explore.
 
 ## Configuration
 
@@ -247,7 +247,7 @@ cd frontend && npx tsc --noEmit && npm run build
 cd frontend && npx playwright install chromium && npm run e2e
 ```
 
-The API suite covers authentication, zone and record CRUD, validation and conflict errors, protected records, batch rollback, bulk operations, import/export, DNSSEC, query logging and test-record. The browser suite (54 steps) covers sign-in/out, every page and dialog, filtering, sorting, pagination, preferences, import/export, keyboard shortcuts, dark mode and deletion. It can also run against a deployment: `BASE=<frontend url> API=<api url> npm run e2e`.
+The API suite covers authentication, zone and record CRUD, validation and conflict errors, protected records, batch rollback, bulk operations, import/export, DNSSEC, query logging and test-record. The browser suite (55 steps) covers sign-in/out, every page and dialog, filtering, sorting, pagination, preferences, import/export, keyboard shortcuts, dark mode and deletion. It can also run against a deployment: `BASE=<frontend url> API=<api url> npm run e2e`.
 
 ## Deployment
 

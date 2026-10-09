@@ -44,9 +44,9 @@ await step("login screen shows when signed out", async () => {
   await page.getByRole("heading", { name: "Sign In" }).waitFor();
 });
 await step("sign in lands on hosted zones and survives reload", async () => {
-  await page.getByPlaceholder("Enter your username").fill("e2e-user");
+  await page.getByPlaceholder("username@example.com").fill("e2e-user@example.com");
   await page.getByRole("button", { name: "Next", exact: true }).click();
-  await page.getByLabel("Password").fill("secret");
+  await page.getByLabel("Password", { exact: true }).fill("secret");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByRole("heading", { name: /Hosted zones/ }).waitFor({ timeout: 90000 });
   await page.reload();
