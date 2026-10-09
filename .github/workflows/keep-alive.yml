@@ -1,10 +1,12 @@
 # Render's free tier puts the API to sleep after ~15 minutes without traffic, which also resets its SQLite file.
-# Pinging /health every 10 minutes keeps the demo awake (and its data intact) between visits.
+# Pinging /health every 5 minutes keeps the demo awake (and its data intact) between visits.
+# GitHub runs scheduled workflows on a best-effort basis and may skip runs, so the app also wakes the API itself
+# (see wakeApi in frontend/app/lib/api.ts) when someone opens it.
 name: Keep demo API awake
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:

@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
-import { API_URL } from "../lib/api";
+import { API_URL, wakeApi } from "../lib/api";
 import { AwsLogo, ChevronLeftIcon, TriangleDownIcon } from "./icons";
 import { Alert, Button, Modal } from "./ui";
 
@@ -100,6 +100,16 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
   const [feedback, setFeedback] = useState(false);
   const [multiSession, setMultiSession] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [waking, setWaking] = useState(false);
+
+  // Start waking the API as soon as the page opens, so it is usually ready by the time someone signs in.
+  useEffect(() => {
+    let active = true;
+    wakeApi(() => active && setWaking(true)).then(() => active && setWaking(false));
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const identity = userType === "root" ? email.trim() : `${username.trim()}@${account.trim()}`;
 
@@ -124,11 +134,14 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
     setBusy(true);
     setError("");
     try {
+      if (!(await wakeApi(() => setWaking(true)))) throw new Error("API unavailable");
+      setWaking(false);
       const response = await fetch(`${API_URL}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: identity }) });
       if (!response.ok) throw new Error();
       onSignedIn(await response.json());
     } catch {
-      setError("Unable to reach the Route 53 demo API. If it was idle, wait a few seconds and try again.");
+      setWaking(false);
+      setError("The demo server isn't responding. It runs on free hosting that sleeps when idle, so please try again in a minute.");
     } finally {
       setBusy(false);
     }
@@ -260,6 +273,11 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
               </button>
               <p className="signin-hint">This is a local demo: any password works and nothing is checked against AWS.</p>
             </form>
+          )}
+          {waking && (
+            <Alert type="info" header="Waking up the demo server" className="signin-notice">
+              It runs on free hosting that sleeps when idle, so the first sign-in can take up to a minute. You can keep going; this page continues automatically.
+            </Alert>
           )}
           <div className="signin-or">
             <span>OR</span>

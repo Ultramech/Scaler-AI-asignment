@@ -20,7 +20,7 @@
 
 **Trying the demo:** open the link, enter any email address (for example `me@example.com`), press **Next**, enter any password and sign in. To try the other flow, choose **IAM user** and enter any account ID, then any username and password. Authentication is mocked, so there is nothing to register. A sample `example.com` zone is there to explore; create your own zones and records freely.
 
-> **About data on the hosted demo.** The app stores everything in SQLite and keeps it for as long as the database file exists (see [Data persistence](#data-persistence)). The hosted API runs on Render's free tier, whose disk is wiped whenever the server restarts or redeploys, after which only the sample zone is back. A scheduled GitHub Action keeps the server awake, which makes this rare, but treat data on the hosted demo as temporary. Run the app locally for durable data.
+> **About data on the hosted demo.** The app stores everything in SQLite and keeps it for as long as the database file exists (see [Data persistence](#data-persistence)). The hosted API runs on Render's free tier, whose disk is wiped whenever the server restarts or redeploys, after which only the sample zone is back. A scheduled GitHub Action pings it to keep it awake, but GitHub runs scheduled jobs on a best-effort basis, so the server can still sleep. When it does, the first request takes up to a minute: the app wakes it as soon as the page opens and shows a "Waking up the demo server" message instead of hanging. Treat data on the hosted demo as temporary, and run the app locally for durable data.
 
 ![Hosted zone details](docs/screenshots/03-hosted-zone-details.png)
 
@@ -206,7 +206,7 @@ Every piece of state lives in one SQLite file, `backend/route53.db` (override wi
 | Where it runs | Persistence |
 | --- | --- |
 | **Local** (`uvicorn` + `npm run dev`) | Durable: the SQLite file stays on your disk across restarts. |
-| **Hosted demo** (Render free tier) | Temporary: the host wipes its disk on restart or redeploy. A keep-alive job makes restarts rare. |
+| **Hosted demo** (Render free tier) | Temporary: the host wipes its disk on restart or redeploy. A keep-alive job helps but cannot guarantee it. |
 
 For a hosted deployment that keeps its data, run the API on a host with a persistent disk and set `ROUTE53_DATABASE_URL` to a path on it, for example `sqlite:////data/route53.db` (on Render this needs a paid plan with a disk). No code changes are needed.
 
@@ -247,13 +247,13 @@ cd frontend && npx tsc --noEmit && npm run build
 cd frontend && npx playwright install chromium && npm run e2e
 ```
 
-The API suite covers authentication, zone and record CRUD, validation and conflict errors, protected records, batch rollback, bulk operations, import/export, DNSSEC, query logging and test-record. The browser suite (55 steps) covers sign-in/out, every page and dialog, filtering, sorting, pagination, preferences, import/export, keyboard shortcuts, dark mode and deletion. It can also run against a deployment: `BASE=<frontend url> API=<api url> npm run e2e`.
+The API suite covers authentication, zone and record CRUD, validation and conflict errors, protected records, batch rollback, bulk operations, import/export, DNSSEC, query logging and test-record. The browser suite (55 steps) covers sign-in/out, every page and dialog, filtering, sorting, pagination, preferences, import/export, keyboard shortcuts, dark mode and deletion. It can also run against a deployment: `BASE=<frontend url> API=<api url> npm run e2e`. `npm run e2e:cold-start` simulates a sleeping API and checks the app recovers by itself.
 
 ## Deployment
 
 - **Frontend:** Vercel. Set `NEXT_PUBLIC_API_URL` to the API URL and deploy the `frontend/` directory.
 - **API:** Render, defined by [`render.yaml`](render.yaml) (a blueprint for `backend/`). It sets `ROUTE53_CORS_ORIGIN_REGEX` so any `*.vercel.app` frontend may call it.
-- **Keep-alive:** [`.github/workflows/keep-alive.yml`](.github/workflows/keep-alive.yml) pings `/health` every 10 minutes so the free tier does not sleep.
+- **Keep-alive:** [`.github/workflows/keep-alive.yml`](.github/workflows/keep-alive.yml) pings `/health` every 5 minutes (best effort). The frontend also wakes a sleeping API itself (`wakeApi` in `frontend/app/lib/api.ts`), retries requests while it starts, and tells the user what is happening.
 
 For durable data in production, run the API on a host with a persistent disk and point `ROUTE53_DATABASE_URL` at it, for example `sqlite:////data/route53.db`.
 

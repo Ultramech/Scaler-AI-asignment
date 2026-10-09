@@ -15,7 +15,7 @@ type ConsoleContextValue = {
   logout: () => void;
   flashes: Flash[];
   /** Shows a flash message. `survive` keeps it visible across that many navigations. */
-  notify: (flash: FlashInput, survive?: number) => void;
+  notify: (flash: FlashInput, survive?: number) => number;
   dismiss: (id: number) => void;
   /** Navigates and clears flash messages that are not meant to survive the move. */
   go: (path: string) => void;
@@ -68,7 +68,9 @@ export function ConsoleProvider({ token, user, onLogout, children }: { token: st
   }, []);
 
   const notify = useCallback((flash: FlashInput, survive = 0) => {
-    setFlashes((current) => [{ ...flash, id: Date.now() + Math.random(), survive }, ...current].slice(0, 4));
+    const id = Date.now() + Math.random();
+    setFlashes((current) => [{ ...flash, id, survive }, ...current].slice(0, 4));
+    return id;
   }, []);
   const dismiss = useCallback((id: number) => setFlashes((current) => current.filter((flash) => flash.id !== id)), []);
 
