@@ -8,6 +8,9 @@ import { Alert, Button, Modal } from "./ui";
 export type Session = { token: string; user: { email: string; name: string } };
 
 type UserType = "root" | "iam";
+
+/** Set on the hosted demo (free hosting that sleeps). Not set when running locally, so the note is hidden there. */
+const HEALTH_URL = process.env.NEXT_PUBLIC_API_HEALTH_URL;
 type Step = "identify" | "password";
 
 /** A blue "label ▾" link in the top-right corner that opens a small menu. */
@@ -198,6 +201,15 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
 
       <div className="signin-layout">
         <section className="signin-card" aria-labelledby="signin-title">
+          {HEALTH_URL && (
+            <Alert type="info" header="Before you sign in" className="signin-freetier">
+              This demo&apos;s server runs on free hosting that sleeps when idle. First open{" "}
+              <a href={HEALTH_URL} target="_blank" rel="noreferrer">
+                {HEALTH_URL}
+              </a>{" "}
+              in a new tab and wait until it shows <code>{`{"status":"ok"}`}</code>, then come back and sign in.
+            </Alert>
+          )}
           {step === "identify" ? (
             <form onSubmit={next} noValidate>
               <h1 id="signin-title">Sign In</h1>

@@ -384,6 +384,25 @@
   color: #414d5c;
 }
 
+.signin-freetier {
+  margin: 0 0 16px;
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.signin-freetier a {
+  color: #0972d3;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.signin-freetier code {
+  font-size: 11px;
+  background: #e8f1fa;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
 .signin-diagnostic {
   display: block;
   margin-top: 6px;

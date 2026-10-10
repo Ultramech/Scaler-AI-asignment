@@ -18,7 +18,7 @@
 
 </div>
 
-**Trying the demo:** open the link, enter any email address (for example `me@example.com`), press **Next**, enter any password and sign in. To try the other flow, choose **IAM user** and enter any account ID, then any username and password. Authentication is mocked, so there is nothing to register. A sample `example.com` zone is there to explore; create your own zones and records freely.
+**Trying the demo:** the API is on free hosting that may be asleep, so the sign-in box shows a link to open in a new tab first (wait for `{"status":"ok"}`). Then enter any email address (for example `me@example.com`), press **Next**, enter any password and sign in. To try the other flow, choose **IAM user** and enter any account ID, then any username and password. Authentication is mocked, so there is nothing to register. A sample `example.com` zone is there to explore; create your own zones and records freely.
 
 > **About data on the hosted demo.** The app stores everything in SQLite and keeps it for as long as the database file exists (see [Data persistence](#data-persistence)). The hosted API runs on Render's free tier, whose disk is wiped whenever the server restarts or redeploys, after which only the sample zone is back. A scheduled GitHub Action pings it to keep it awake, but GitHub runs scheduled jobs on a best-effort basis, so the server can still sleep. When it does, the first request takes up to a minute: the app wakes it as soon as the page opens and shows a "Waking up the demo server" message instead of hanging. Treat data on the hosted demo as temporary, and run the app locally for durable data.
 
@@ -116,6 +116,7 @@ Open <http://localhost:3000> and sign in with any email address and password. In
 | Variable | Where | Default | Purpose |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | frontend (build time) | `http://localhost:8000` | URL the browser calls. The Vercel deployment sets it to `/api` (same origin, see below) |
+| `NEXT_PUBLIC_API_HEALTH_URL` | frontend (build time) | none | When set (hosted demo), the sign-in box tells people to open this health link in a new tab first, because the free server may be asleep |
 | `API_PROXY_TARGET` | frontend (build time) | none | When set, `/api/*` is forwarded to this API URL on the server (`next.config.mjs`) |
 | `ROUTE53_DATABASE_URL` | backend | `sqlite:///./route53.db` | SQLite file location |
 | `ROUTE53_CORS_ORIGINS` | backend | `http://localhost:3000,http://127.0.0.1:3000` | Comma-separated browser origins allowed to call the API |
