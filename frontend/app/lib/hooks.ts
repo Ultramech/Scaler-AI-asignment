@@ -82,3 +82,48 @@ export function usePreferences(key: string): [TablePreferences, (next: TablePref
   };
   return [preferences, update];
 }
+
+/** Wraps an async action and reports `busy` while it runs, so a submit/confirm button can be disabled. */
+export function useBusy<A extends unknown[]>(action: (...args: A) => Promise<void>) {
+  const [busy, setBusy] = useState(false);
+  const run = async (...args: A) => {
+    setBusy(true);
+    try {
+      await action(...args);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return [busy, run] as const;
+}
+
+/** Splits rows into pages. Goes back to page 1 whenever `resetOn` changes (a new filter, page size, ...). */
+export function usePagination<T>(rows: T[], pageSize: number, resetOn: unknown[]) {
+  const [page, setPage] = useState(1);
+  const pages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const pageRows = rows.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => setPage(1), resetOn); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (page > pages) setPage(pages);
+  }, [page, pages]);
+  return { page, setPage, pages, pageRows };
+}
+
+/**
+ * One-key shortcuts such as { "/": focusSearch, n: createRecord }. Keys are matched in lower case and ignored
+ * while typing in a field, holding Ctrl/Alt/Cmd, or when a dialog is open.
+ */
+export function useShortcuts(handlers: Record<string, () => void>) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || event.metaKey || event.ctrlKey || event.altKey || document.querySelector(".modal")) return;
+      const handler = handlers[event.key.toLowerCase()];
+      if (!handler) return;
+      event.preventDefault();
+      handler();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }); // no dependency list: re-attached every render so the handlers are always current
+}

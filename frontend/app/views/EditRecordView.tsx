@@ -7,7 +7,7 @@ import { Alert, Button, Container, Loading, PageHeader } from "../components/com
 import { useZone, ZoneBoundary } from "../components/zones/ZoneBoundary";
 import { useConsole } from "../lib/console";
 import { displayName } from "../lib/dns";
-import { useResource } from "../lib/hooks";
+import { useBusy, useResource } from "../lib/hooks";
 import { paths } from "../lib/router";
 import type { DnsRecord, Zone } from "../lib/types";
 
@@ -43,15 +43,13 @@ function EditRecordForm({ zone, record }: { zone: Zone; record: DnsRecord }) {
   const { api, go, notify } = useConsole();
   const [draft, setDraft] = useState<RecordDraft>(() => draftFromRecord(record, zone));
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   useEffect(() => setDraft(draftFromRecord(record, zone)), [record, zone]);
 
-  const save = async (event: FormEvent) => {
+  const [busy, save] = useBusy(async (event: FormEvent) => {
     event.preventDefault();
     const problem = validateDraft(draft);
     setError(problem);
     if (problem) return;
-    setBusy(true);
     try {
       await api.put(`/records/${record.id}`, draftToInput(draft));
       notify({ type: "success", header: "Record updated successfully." }, 1);
@@ -59,10 +57,8 @@ function EditRecordForm({ zone, record }: { zone: Zone; record: DnsRecord }) {
     } catch (failure) {
       setError((failure as Error).message);
       notify({ type: "error", header: "Unable to save the record", content: (failure as Error).message });
-    } finally {
-      setBusy(false);
     }
-  };
+  });
 
   return (
     <form className="form-page" onSubmit={save}>

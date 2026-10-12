@@ -8,6 +8,7 @@ import { Button, Container, PageHeader, useDisclosure } from "../components/comm
 import { useZone, ZoneBoundary } from "../components/zones/ZoneBoundary";
 import { ApiError } from "../lib/api";
 import { useConsole } from "../lib/console";
+import { useBusy } from "../lib/hooks";
 import { displayName, ROUTING_POLICIES } from "../lib/dns";
 import { paths } from "../lib/router";
 import type { Zone } from "../lib/types";
@@ -45,7 +46,6 @@ function CreateRecordForm({ zone }: { zone: Zone }) {
   const [policy, setPolicy] = useState("Simple");
   const [drafts, setDrafts] = useState<RecordDraft[]>([newDraft(0)]);
   const [errors, setErrors] = useState<Record<number, string>>({});
-  const [busy, setBusy] = useState(false);
   const method = useDisclosure(true);
 
   const update = (draft: RecordDraft) => setDrafts((current) => current.map((entry) => (entry.key === draft.key ? draft : entry)));
@@ -55,7 +55,7 @@ function CreateRecordForm({ zone }: { zone: Zone }) {
     setErrors({});
   };
 
-  const submit = async (event?: FormEvent) => {
+  const [busy, submit] = useBusy(async (event?: FormEvent) => {
     event?.preventDefault();
     const found: Record<number, string> = {};
     drafts.forEach((draft) => {
@@ -64,7 +64,6 @@ function CreateRecordForm({ zone }: { zone: Zone }) {
     });
     setErrors(found);
     if (Object.keys(found).length) return;
-    setBusy(true);
     try {
       const result = await api.post<{ created: number }>(`/zones/${zone.id}/records/batch`, { records: drafts.map(draftToInput) });
       notify({ type: "success", header: result.created === 1 ? "Record created successfully." : `${result.created} records created successfully.` }, 1);
@@ -74,10 +73,8 @@ function CreateRecordForm({ zone }: { zone: Zone }) {
       const target = failure.index !== undefined ? drafts[failure.index] : drafts[0];
       if (drafts.length > 1 || mode === "quick") setErrors({ [target.key]: failure.message });
       notify({ type: "error", header: "Unable to create the record", content: failure.message });
-    } finally {
-      setBusy(false);
     }
-  };
+  });
 
   const choosingPolicy = mode === "wizard" && step === 1;
   const title = mode === "wizard" ? (step === 1 ? "Choose routing policy" : "Configure records") : "Quick create record";

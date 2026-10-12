@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConsole } from "../../lib/console";
 import { displayName, FILTER_TYPES, recordTtl, ROUTING_POLICIES } from "../../lib/dns";
-import { Resource, usePreferences } from "../../lib/hooks";
+import { Resource, usePagination, usePreferences, useShortcuts } from "../../lib/hooks";
 import { paths } from "../../lib/router";
 import type { DnsRecord, Zone } from "../../lib/types";
 import { Column, DataTable, useSort } from "../common/DataTable";
@@ -49,7 +49,6 @@ export function RecordsTab({ zone, records, filter, onFilter, selected, onSelect
   const [type, setType] = useState("");
   const [policy, setPolicy] = useState("");
   const [alias, setAlias] = useState("");
-  const [page, setPage] = useState(1);
   const [preferences, setPreferences] = usePreferences("records");
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [deleting, setDeleting] = useState<DnsRecord[] | null>(null);
@@ -62,8 +61,7 @@ export function RecordsTab({ zone, records, filter, onFilter, selected, onSelect
     [all, type, policy, alias],
   );
   const { sorted, sort, toggle } = useSort(filtered, COLUMNS, null);
-  const pages = Math.max(1, Math.ceil(sorted.length / preferences.pageSize));
-  const pageRows = sorted.slice((page - 1) * preferences.pageSize, page * preferences.pageSize);
+  const { page, setPage, pages, pageRows } = usePagination(sorted, preferences.pageSize, [filter, type, policy, alias, preferences.pageSize]);
   const selectedRecords = all.filter((record) => selected.has(record.id));
   const hasProtected = selectedRecords.some((record) => record.protected);
 
@@ -75,29 +73,11 @@ export function RecordsTab({ zone, records, filter, onFilter, selected, onSelect
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bulkRequest]);
 
-  useEffect(() => setPage(1), [filter, type, policy, alias, preferences.pageSize]);
-  useEffect(() => {
-    if (page > pages) setPage(pages);
-  }, [page, pages]);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || event.metaKey || event.ctrlKey || event.altKey || document.querySelector(".modal")) return;
-      if (event.key === "/") {
-        event.preventDefault();
-        search.current?.focus();
-      } else if (event.key.toLowerCase() === "n") {
-        event.preventDefault();
-        go(paths.recordCreate(zone.id));
-      } else if (event.key.toLowerCase() === "r") {
-        event.preventDefault();
-        records.reload();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [go, zone.id, records.reload]);
+  useShortcuts({
+    "/": () => search.current?.focus(),
+    n: () => go(paths.recordCreate(zone.id)),
+    r: records.reload,
+  });
 
   const remove = async () => {
     if (!deleting) return;

@@ -6,6 +6,7 @@ import { hasDuplicateTags, TagEditor } from "../components/zones/TagEditor";
 import { Button, Container, Field, PageHeader } from "../components/common/ui";
 import { useZone, ZoneBoundary } from "../components/zones/ZoneBoundary";
 import { useConsole } from "../lib/console";
+import { useBusy } from "../lib/hooks";
 import { displayName } from "../lib/dns";
 import { paths } from "../lib/router";
 import type { Tag, Zone } from "../lib/types";
@@ -28,26 +29,22 @@ function EditZoneForm({ zone }: { zone: Zone }) {
   const { api, go, notify, notifyError } = useConsole();
   const [comment, setComment] = useState(zone.comment);
   const [tags, setTags] = useState<Tag[]>(zone.tags);
-  const [busy, setBusy] = useState(false);
   useEffect(() => {
     setComment(zone.comment);
     setTags(zone.tags);
   }, [zone]);
 
-  const save = async (event: FormEvent) => {
+  const [busy, save] = useBusy(async (event: FormEvent) => {
     event.preventDefault();
     if (hasDuplicateTags(tags)) return notify({ type: "error", header: "Tag keys must be unique." });
-    setBusy(true);
     try {
       await api.put(`/zones/${zone.id}`, { comment, tags: tags.filter((tag) => tag.key.trim()) });
       notify({ type: "success", header: `Successfully updated hosted zone ${displayName(zone.name)}.` }, 1);
       go(paths.zone(zone.id));
     } catch (error) {
       notifyError("Unable to save the hosted zone", error);
-    } finally {
-      setBusy(false);
     }
-  };
+  });
 
   return (
     <form className="form-page" onSubmit={save}>

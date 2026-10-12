@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { API_URL } from "../../lib/api";
+import { useBusy } from "../../lib/hooks";
 import { AwsLogo, ChevronLeftIcon } from "../common/icons";
 import { Alert } from "../common/ui";
 import { TopMenu } from "./TopMenu";
@@ -35,7 +36,6 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
   const [error, setError] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [multiSession, setMultiSession] = useState(false);
-  const [busy, setBusy] = useState(false);
 
   const identity = userType === "root" ? email.trim() : `${username.trim()}@${account.trim()}`;
 
@@ -53,11 +53,10 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
     setPassword("");
   };
 
-  const signIn = async (event: FormEvent) => {
+  const [busy, signIn] = useBusy(async (event: FormEvent) => {
     event.preventDefault();
     if (userType === "iam" && !username.trim()) return setError("Enter your IAM username.");
     if (!password) return setError("Enter your password.");
-    setBusy(true);
     setError("");
     try {
       const response = await fetch(`${API_URL}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: identity }) });
@@ -65,10 +64,8 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
       onSignedIn(await response.json());
     } catch {
       setError(`Can't reach the API at ${API_URL}. Start the backend first: cd backend && uvicorn app.main:app --port 8000`);
-    } finally {
-      setBusy(false);
     }
-  };
+  });
 
   const chooseType = (type: UserType) => {
     setUserType(type);

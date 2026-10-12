@@ -5,11 +5,16 @@ import { Frame } from "../components/layout/Frame";
 import { hasDuplicateTags, TagEditor } from "../components/zones/TagEditor";
 import { Button, Container, Field, InfoLink, PageHeader } from "../components/common/ui";
 import { useConsole } from "../lib/console";
+import { useBusy } from "../lib/hooks";
 import { displayName } from "../lib/dns";
 import { paths } from "../lib/router";
 import type { Tag, Zone } from "../lib/types";
 
 const REGIONS = ["us-east-1", "us-east-2", "us-west-1", "us-west-2", "eu-west-1", "eu-central-1", "ap-south-1", "ap-southeast-1", "ap-southeast-2", "ap-northeast-1"];
+const ZONE_TYPES = [
+  { isPrivate: false, title: "Public hosted zone", description: "A public hosted zone determines how traffic is routed on the internet." },
+  { isPrivate: true, title: "Private hosted zone", description: "A private hosted zone determines how traffic is routed within an Amazon VPC." },
+];
 const LABEL = /^[a-z0-9!"#$%&'()*+,/:;<=>?@[\\\]^_`{|}~-]{1,63}$/i;
 
 /** Mirrors the server's domain rules so mistakes show up before the request is sent. */
@@ -34,16 +39,14 @@ export function CreateZoneView() {
   const [vpcId, setVpcId] = useState("");
   const [tags, setTags] = useState<Tag[]>([]);
   const [errors, setErrors] = useState<{ name?: string; vpc?: string }>({});
-  const [busy, setBusy] = useState(false);
 
-  const submit = async (event: FormEvent) => {
+  const [busy, submit] = useBusy(async (event: FormEvent) => {
     event.preventDefault();
     const nameError = validateDomain(name, privateZone);
     const vpcError = privateZone && !vpcId.trim() ? "Enter the ID of a VPC to associate with the hosted zone." : undefined;
     setErrors({ name: nameError ?? undefined, vpc: vpcError });
     if (nameError || vpcError) return;
     if (hasDuplicateTags(tags)) return notify({ type: "error", header: "Tag keys must be unique." });
-    setBusy(true);
     try {
       const zone = await api.post<Zone>("/zones", {
         name,
@@ -59,10 +62,8 @@ export function CreateZoneView() {
       const message = (error as Error).message;
       if (/already exists/.test(message)) setErrors({ name: message });
       else notify({ type: "error", header: "Unable to create the hosted zone", content: message });
-    } finally {
-      setBusy(false);
     }
-  };
+  });
 
   return (
     <Frame
@@ -102,20 +103,15 @@ export function CreateZoneView() {
             </legend>
             <div className="field-description">The type indicates whether you want to route traffic on the internet or in an Amazon VPC.</div>
             <div className="tile-row">
-              <label className={`tile ${!privateZone ? "selected" : ""}`}>
-                <input type="radio" name="zone-type" checked={!privateZone} onChange={() => setPrivateZone(false)} />
-                <span>
-                  <strong>Public hosted zone</strong>
-                  <small>A public hosted zone determines how traffic is routed on the internet.</small>
-                </span>
-              </label>
-              <label className={`tile ${privateZone ? "selected" : ""}`}>
-                <input type="radio" name="zone-type" checked={privateZone} onChange={() => setPrivateZone(true)} />
-                <span>
-                  <strong>Private hosted zone</strong>
-                  <small>A private hosted zone determines how traffic is routed within an Amazon VPC.</small>
-                </span>
-              </label>
+              {ZONE_TYPES.map((option) => (
+                <label key={option.title} className={`tile ${privateZone === option.isPrivate ? "selected" : ""}`}>
+                  <input type="radio" name="zone-type" checked={privateZone === option.isPrivate} onChange={() => setPrivateZone(option.isPrivate)} />
+                  <span>
+                    <strong>{option.title}</strong>
+                    <small>{option.description}</small>
+                  </span>
+                </label>
+              ))}
             </div>
           </fieldset>
           {privateZone && (

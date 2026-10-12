@@ -8,7 +8,7 @@ import { Alert, Button, Container, PageHeader, Pagination, SearchInput } from ".
 import { useZone, ZoneBoundary } from "../components/zones/ZoneBoundary";
 import { useConsole } from "../lib/console";
 import { displayName } from "../lib/dns";
-import { useDebounced, usePreferences } from "../lib/hooks";
+import { useBusy, useDebounced, usePagination, usePreferences } from "../lib/hooks";
 import { paths } from "../lib/router";
 import type { ImportPreview, Zone } from "../lib/types";
 
@@ -48,8 +48,6 @@ function ImportForm({ zone }: { zone: Zone }) {
   const [content, setContent] = useState("");
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [filter, setFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const [busy, setBusy] = useState(false);
   const [preferences, setPreferences] = usePreferences("import-preview");
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const upload = useRef<HTMLInputElement>(null);
@@ -76,24 +74,19 @@ function ImportForm({ zone }: { zone: Zone }) {
     return needle ? all.filter((row) => `${row.name} ${row.type} ${row.value} ${row.ttl}`.toLowerCase().includes(needle)) : all;
   }, [preview, filter]);
   const { sorted, sort, toggle } = useSort(rows, COLUMNS, { id: "name", desc: false });
-  const pages = Math.max(1, Math.ceil(sorted.length / preferences.pageSize));
-  const pageRows = sorted.slice((page - 1) * preferences.pageSize, page * preferences.pageSize);
-  useEffect(() => setPage(1), [filter, preferences.pageSize, preview]);
+  const { page, setPage, pages, pageRows } = usePagination(sorted, preferences.pageSize, [filter, preferences.pageSize, preview]);
 
-  const canImport = Boolean(preview && !preview.error && preview.records.length && !preview.conflicts.length) && !busy;
-
-  const submit = async () => {
-    setBusy(true);
+  const [busy, submit] = useBusy(async () => {
     try {
       const result = await api.post<{ imported: number }>(`/zones/${zone.id}/records/import`, { content });
       notify({ type: "success", header: `Successfully imported ${result.imported} ${result.imported === 1 ? "record" : "records"} into ${displayName(zone.name)}.` }, 1);
       go(paths.zone(zone.id));
     } catch (error) {
       notifyError("Unable to import the zone file", error);
-    } finally {
-      setBusy(false);
     }
-  };
+  });
+
+  const canImport = Boolean(preview && !preview.error && preview.records.length && !preview.conflicts.length) && !busy;
 
   return (
     <div className="form-page import-page">

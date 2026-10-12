@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Column, DataTable, useSort } from "../components/common/DataTable";
 import { Frame } from "../components/layout/Frame";
 import { RefreshIcon } from "../components/common/icons";
@@ -9,7 +9,7 @@ import { PreferencesModal, searchModeSentence } from "../components/layout/Prefe
 import { Alert, Button, InfoLink, Pagination, RoundIconButton, SearchInput } from "../components/common/ui";
 import { useConsole } from "../lib/console";
 import { displayName } from "../lib/dns";
-import { useDebounced, usePreferences, useResource } from "../lib/hooks";
+import { useDebounced, usePagination, usePreferences, useResource, useShortcuts } from "../lib/hooks";
 import { paths } from "../lib/router";
 import type { Zone } from "../lib/types";
 
@@ -53,42 +53,23 @@ export function ZonesView() {
   const [preferences, setPreferences] = usePreferences("zones");
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
-  const [page, setPage] = useState(1);
   const [deleting, setDeleting] = useState<Zone | null>(null);
 
   const rows = zones.data ?? [];
   const { sorted, sort, toggle } = useSort(rows, COLUMNS, null);
-  const pages = Math.max(1, Math.ceil(sorted.length / preferences.pageSize));
-  const pageRows = useMemo(() => sorted.slice((page - 1) * preferences.pageSize, page * preferences.pageSize), [sorted, page, preferences.pageSize]);
+  const { page, setPage, pages, pageRows } = usePagination(sorted, preferences.pageSize, [query, preferences.pageSize]);
   const selectedZone = rows.find((zone) => selected.has(zone.id)) ?? null;
 
-  useEffect(() => setPage(1), [query, preferences.pageSize]);
-  useEffect(() => {
-    if (page > pages) setPage(pages);
-  }, [page, pages]);
   useEffect(() => {
     // Forget a selection that no longer exists after a refresh or filter change.
     if (selected.size && !selectedZone) setSelected(new Set());
   }, [selected, selectedZone]);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || event.metaKey || event.ctrlKey || event.altKey || document.querySelector(".modal")) return;
-      if (event.key === "/") {
-        event.preventDefault();
-        document.querySelector<HTMLInputElement>(".filter-row input[type=search]")?.focus();
-      } else if (event.key.toLowerCase() === "c") {
-        event.preventDefault();
-        go(paths.zoneCreate());
-      } else if (event.key.toLowerCase() === "r") {
-        event.preventDefault();
-        zones.reload();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [go, zones.reload]);
+  useShortcuts({
+    "/": () => document.querySelector<HTMLInputElement>(".filter-row input[type=search]")?.focus(),
+    c: () => go(paths.zoneCreate()),
+    r: zones.reload,
+  });
 
   const remove = async () => {
     if (!deleting) return;

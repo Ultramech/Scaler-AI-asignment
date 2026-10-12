@@ -2,22 +2,9 @@
 
 import { useState } from "react";
 import { displayName } from "../../lib/dns";
+import { useBusy } from "../../lib/hooks";
 import type { DnsRecord, Zone } from "../../lib/types";
 import { Button, Field, Modal } from "./ui";
-
-/** Runs an async confirm action and reports `busy` while it is running, so the confirm button can be disabled. */
-function useBusy<A extends unknown[]>(action: (...args: A) => Promise<void>) {
-  const [busy, setBusy] = useState(false);
-  const run = async (...args: A) => {
-    setBusy(true);
-    try {
-      await action(...args);
-    } finally {
-      setBusy(false);
-    }
-  };
-  return [busy, run] as const;
-}
 
 /** Deleting a hosted zone requires typing "delete", like the real console. */
 export function DeleteZoneModal({ zone, onCancel, onConfirm }: { zone: Zone; onCancel: () => void; onConfirm: () => Promise<void> }) {
