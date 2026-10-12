@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { IS_LOCAL_API, wakeApi } from "./lib/api";
 import { Login, Session } from "./components/Login";
-import { ConsoleProvider, useConsole } from "./lib/console";
+import { ConsoleProvider } from "./lib/console";
 import { Route, useRoute } from "./lib/router";
 import { CreateRecordView } from "./views/CreateRecordView";
 import { CreateZoneView } from "./views/CreateZoneView";
@@ -64,33 +63,9 @@ export default function Page() {
   );
 }
 
-/** Explains the wait when the (free-tier) API is asleep, and removes itself once the API answers. */
-function WakeNotice() {
-  const { notify, dismiss } = useConsole();
-  useEffect(() => {
-    let id: number | null = null;
-    let active = true;
-    wakeApi(() => {
-      if (active && !IS_LOCAL_API) id = notify({ type: "info", header: "Waking up the demo server", content: "It runs on free hosting that sleeps when idle, so this can take up to a minute." });
-    }).then(() => {
-      if (id !== null) dismiss(id);
-    });
-    return () => {
-      active = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return null;
-}
-
 function Routes() {
   const route = useRoute();
-  return (
-    <>
-      <WakeNotice />
-      {renderRoute(route)}
-    </>
-  );
+  return renderRoute(route);
 }
 
 function renderRoute(route: Route) {

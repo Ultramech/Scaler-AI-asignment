@@ -403,13 +403,6 @@
   border-radius: 3px;
 }
 
-.signin-diagnostic {
-  display: block;
-  margin-top: 6px;
-  font-size: 11px;
-  color: #5f6b7a;
-}
-
 .signin-feedback-label {
   display: block;
   margin-bottom: 6px;

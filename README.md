@@ -249,13 +249,13 @@ cd frontend && npx tsc --noEmit && npm run build
 cd frontend && npx playwright install chromium && npm run e2e
 ```
 
-The API suite covers authentication, zone and record CRUD, validation and conflict errors, protected records, batch rollback, bulk operations, import/export, DNSSEC, query logging and test-record. The browser suite (55 steps) covers sign-in/out, every page and dialog, filtering, sorting, pagination, preferences, import/export, keyboard shortcuts, dark mode and deletion. It can also run against a deployment: `BASE=<frontend url> API=<api url> npm run e2e`. `npm run e2e:cold-start` simulates a sleeping hosted API (and a local API that isn't running) and checks the app explains the wait and recovers by itself; its header lists the two app copies it needs.
+The API suite covers authentication, zone and record CRUD, validation and conflict errors, protected records, batch rollback, bulk operations, import/export, DNSSEC, query logging and test-record. The browser suite (55 steps) covers sign-in/out, every page and dialog, filtering, sorting, pagination, preferences, import/export, keyboard shortcuts, dark mode and deletion. It can also run against a deployment: `BASE=<frontend url> API=<api url> npm run e2e`.
 
 ## Deployment
 
 - **Frontend:** Vercel. Set `NEXT_PUBLIC_API_URL=/api` and `API_PROXY_TARGET=<API url>` and deploy the `frontend/` directory. The browser only ever talks to the Vercel address; `next.config.mjs` forwards `/api/*` to the API, so there are no cross-site requests (no CORS, and nothing for an extension or network to block).
 - **API:** Render, defined by [`render.yaml`](render.yaml) (a blueprint for `backend/`). It sets `ROUTE53_CORS_ORIGIN_REGEX` so any `*.vercel.app` frontend may call it.
-- **Keep-alive:** [`.github/workflows/keep-alive.yml`](.github/workflows/keep-alive.yml) pings `/health` every 5 minutes (best effort). The frontend also wakes a sleeping API itself (`wakeApi` in `frontend/app/lib/api.ts`), retries requests while it starts, and tells the user what is happening.
+- **Keep-alive:** [`.github/workflows/keep-alive.yml`](.github/workflows/keep-alive.yml) pings `/health` every 5 minutes (best effort). If the API is asleep, open its `/health` link once and wait for `{"status":"ok"}` before signing in; the sign-in page links to it when `NEXT_PUBLIC_API_HEALTH_URL` is set.
 
 For durable data in production, run the API on a host with a persistent disk and point `ROUTE53_DATABASE_URL` at it, for example `sqlite:////data/route53.db`.
 
