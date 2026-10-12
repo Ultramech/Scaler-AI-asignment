@@ -31,9 +31,7 @@
 | --- | --- |
 | ![Sign in](docs/screenshots/01-sign-in.png) | ![Hosted zones](docs/screenshots/02-hosted-zones.png) |
 | ![Create record](docs/screenshots/04-create-record.png) | ![Import zone file](docs/screenshots/05-import-zone-file.png) |
-| ![DNSSEC signing](docs/screenshots/06-dnssec.png) | ![Preferences](docs/screenshots/07-preferences.png) |
-
-![Dark mode](docs/screenshots/08-dark-mode.png)
+| ![Preferences](docs/screenshots/07-preferences.png) | ![Dark mode](docs/screenshots/08-dark-mode.png) |
 
 </details>
 
@@ -62,7 +60,7 @@
 | Record types A, AAAA, CNAME, TXT, MX, NS, PTR, SRV, CAA | Done | Per-type validation in `backend/app/dns.py` |
 | All data persists in SQLite | Done | `backend/route53.db`, created on first start |
 | Route 53 experience: navigation, tables, forms, search, filters, pagination, modals, notifications | Done | See [Features](#features) |
-| Mocked sections as placeholders (Dashboard, Traffic policies, Health checks, Resolver, Profiles) | Done | Dashboard page with live counts; the rest show a "Coming soon" page |
+| Mocked sections as placeholders (Dashboard, Traffic policies, Health checks, Resolver, Profiles) | Done | All five show a "Coming soon" page |
 | **Bonus:** import BIND zone files | Done | *Import zone file* page with live preview |
 | **Bonus:** export hosted zones as JSON or BIND | Done | *Export JSON / Export BIND* on the records card |
 | **Bonus:** dark mode | Done | Account menu, remembered between visits |
@@ -73,13 +71,13 @@
 
 ## Features
 
-**Authentication (mocked).** A sign-in page modelled on the real AWS one: root user (email address, then password) or IAM user (account ID or alias, then username and password), with the feedback, multi-session and language links, the cube background and the promo panel. Any credentials are accepted: IAM, accounts and billing are intentionally mocked. The session survives reloads and *Sign out* clears it.
+**Authentication (mocked).** A sign-in page modelled on the real AWS one: root user (email address, then password) or IAM user (account ID or alias, then username and password), with the multi-session and language links, the cube background and the promo panel. Any credentials are accepted: IAM, accounts and billing are intentionally mocked. The session survives reloads and *Sign out* clears it.
 
 **Hosted zones**
 - Table with search, sortable and resizable columns, pagination, single selection, and a *Preferences* dialog (page size, wrap lines, search mode, visible columns).
 - Create public or private zones (private zones take a VPC), with description and tags. Domain names are validated and duplicates are rejected. Every zone starts with an apex `NS` and `SOA` record, like Route 53.
-- Zone page: collapsible details (ID, description, query log, type, record count, name servers) and the *Records*, *Accelerated recovery*, *DNSSEC signing* and *Hosted zone tags* tabs.
-- Edit the description and tags, delete behind a "type `delete` to confirm" dialog, *Test record*, *Configure query logging*, *Manage tags*.
+- Zone page: collapsible details (ID, description, type, record count, name servers) and the *Records* and *Hosted zone tags* tabs.
+- Edit the description and tags, delete behind a "type `delete` to confirm" dialog, *Manage tags*.
 
 **DNS records**
 - Types `A`, `AAAA`, `CNAME`, `TXT`, `MX`, `NS`, `PTR`, `SRV`, `CAA` (plus the zone's `SOA`), with per-type value validation (IPv4/IPv6, MX priority, SRV, CAA, quoted TXT, hostnames).
@@ -157,7 +155,7 @@ frontend/app
 frontend/e2e   console.e2e.mjs: browser test of the whole UI
 ```
 
-The frontend keeps no durable state of its own: every list, form and count comes from the API. Only UI preferences (theme, table preferences, panel position, session token) live in `localStorage`. Pages are addressed by hash (`#/hostedzones/<id>?tab=dnssec`), so Back/Forward and deep links work without server routing.
+The frontend keeps no durable state of its own: every list, form and count comes from the API. Only UI preferences (theme, table preferences, session token) live in `localStorage`. Pages are addressed by hash (`#/hostedzones/<id>?tab=tags`), so Back/Forward and deep links work without server routing.
 
 ## Database schema
 
@@ -173,11 +171,6 @@ erDiagram
         string vpc_region
         string vpc_id
         datetime created_at
-        string query_log_group
-        bool accelerated_recovery
-        bool dnssec_enabled
-        string dnssec_ksk_name
-        datetime dnssec_enabled_at
     }
     hosted_zone_tags {
         int id PK
@@ -203,7 +196,7 @@ Deleting a hosted zone cascades to its records and tags. Columns added after the
 
 ## Data persistence
 
-Every piece of state lives in one SQLite file, `backend/route53.db` (override with `ROUTE53_DATABASE_URL`): hosted zones, records, tags and the DNSSEC, accelerated-recovery and query-logging settings. The file is created on first start, an `example.com` sample zone is seeded only when the database is empty, and restarting the API never deletes anything. This was checked by creating a zone with a tag and a record, stopping the server, restarting it on the same file, and reading all of it back.
+Every piece of state lives in one SQLite file, `backend/route53.db` (override with `ROUTE53_DATABASE_URL`): hosted zones, records and tags. The file is created on first start, an `example.com` sample zone is seeded only when the database is empty, and restarting the API never deletes anything. This was checked by creating a zone with a tag and a record, stopping the server, restarting it on the same file, and reading all of it back.
 
 | Where it runs | Persistence |
 | --- | --- |
@@ -223,10 +216,6 @@ All endpoints except `/health` and `/auth/login` need `Authorization: Bearer rou
 | GET, POST | `/zones` | List / search (`?q=`), create a hosted zone |
 | GET, PUT, DELETE | `/zones/{id}` | Read, update description and tags, delete |
 | PUT | `/zones/{id}/tags` | Replace the tags |
-| PUT, DELETE | `/zones/{id}/query-logging` | Set or remove the CloudWatch log group |
-| PUT | `/zones/{id}/accelerated-recovery` | Enable or disable |
-| PUT | `/zones/{id}/dnssec` | Enable (creates a key-signing key) or disable |
-| POST | `/zones/{id}/test-record` | Simulate the answer Route 53 would give |
 | GET, POST | `/zones/{id}/records` | List / search (`?q=`), create a record |
 | POST | `/zones/{id}/records/batch` | Create several records atomically |
 | DELETE, PATCH | `/zones/{id}/records` | Bulk delete by id / bulk change TTL |
@@ -249,7 +238,7 @@ cd frontend && npx tsc --noEmit && npm run build
 cd frontend && npx playwright install chromium && npm run e2e
 ```
 
-The API suite covers authentication, zone and record CRUD, validation and conflict errors, protected records, batch rollback, bulk operations, import/export, DNSSEC, query logging and test-record. The browser suite (55 steps) covers sign-in/out, every page and dialog, filtering, sorting, pagination, preferences, import/export, keyboard shortcuts, dark mode and deletion. It can also run against a deployment: `BASE=<frontend url> API=<api url> npm run e2e`.
+The API suite covers authentication, zone and record CRUD, validation and conflict errors, protected records, batch rollback, bulk operations, import/export and search. The browser suite (51 steps) covers sign-in/out, every page and dialog, filtering, sorting, pagination, preferences, import/export, keyboard shortcuts, dark mode and deletion. It can also run against a deployment: `BASE=<frontend url> API=<api url> npm run e2e`.
 
 ## Deployment
 
@@ -261,7 +250,7 @@ For durable data in production, run the API on a host with a persistent disk and
 
 ## Design decisions and limitations
 
-- **DNS is simulated.** Nothing is propagated or resolved. Name servers are generated per zone; DNSSEC, accelerated recovery and query logging persist their settings only.
+- **DNS is simulated.** Nothing is propagated or resolved. Name servers are generated per zone.
 - **Authentication is mocked on purpose.** Any credentials are accepted and the API issues a fixed demo token, as the assignment allows for IAM and account concerns. There is no sign-up flow.
 - **A small, direct data model.** Three tables map straight to SQLAlchemy models; multi-value records keep one value per line so an edit stays a single row.
 - **Validation lives on the server** (`dns.py`) and is mirrored in the forms for fast feedback.

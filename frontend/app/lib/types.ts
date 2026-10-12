@@ -1,11 +1,5 @@
 export type Tag = { key: string; value: string };
 
-export type DnssecInfo = {
-  enabled: boolean;
-  status: "Signing" | "Not signing";
-  keys: { name: string; status: string; created_at: string | null }[];
-};
-
 export type Zone = {
   id: string;
   name: string;
@@ -17,9 +11,6 @@ export type Zone = {
   record_count: number;
   tags: Tag[];
   name_servers: string[];
-  query_log_group: string;
-  accelerated_recovery: boolean;
-  dnssec: DnssecInfo;
 };
 
 export type DnsRecord = {
@@ -59,14 +50,4 @@ export type ImportPreview = {
   records: { name: string; type: string; value: string; ttl: number }[];
   conflicts: string[];
   error: string | null;
-};
-
-export type TestRecordResult = {
-  response_code: "NOERROR" | "NXDOMAIN";
-  protocol: string;
-  record_name: string;
-  record_type: string;
-  resolver_ip: string;
-  ttl: number | null;
-  values: string[];
 };

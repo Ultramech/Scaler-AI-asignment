@@ -83,17 +83,7 @@ def verify(client: Client) -> None:
     private = client.ok("POST", "/zones", {"name": "corp.internal", "private_zone": True, "vpc_id": "vpc-1", "vpc_region": "us-east-1"})
     assert private["private_zone"] and private["vpc_id"] == "vpc-1"
     expect(client, 400, "POST", "/zones", {"name": "novpc.internal", "private_zone": True})
-    expect(client, 400, "PUT", f"/zones/{private['id']}/dnssec", {"enabled": True})
     client.ok("DELETE", f"/zones/{private['id']}")
-
-    # ---- zone settings
-    assert client.ok("PUT", f"/zones/{zid}/accelerated-recovery", {"enabled": True})["accelerated_recovery"] is True
-    signed = client.ok("PUT", f"/zones/{zid}/dnssec", {"enabled": True, "ksk_name": "my-ksk"})
-    assert signed["dnssec"]["status"] == "Signing" and signed["dnssec"]["keys"][0]["name"] == "my-ksk"
-    assert client.ok("PUT", f"/zones/{zid}/dnssec", {"enabled": False})["dnssec"]["keys"] == []
-    expect(client, 422, "PUT", f"/zones/{zid}/query-logging", {"log_group": "bad group!"})
-    assert client.ok("PUT", f"/zones/{zid}/query-logging", {"log_group": "/aws/route53/smoke"})["query_log_group"] == "/aws/route53/smoke"
-    assert client.ok("DELETE", f"/zones/{zid}/query-logging")["query_log_group"] == ""
 
     # ---- default and protected records
     defaults = client.ok("GET", f"/zones/{zid}/records")
@@ -140,11 +130,6 @@ def verify(client: Client) -> None:
     failure = expect(client, 400, "POST", f"/zones/{zid}/records/batch", {"records": [{"name": "b3", "type": "A", "value": "10.0.0.3"}, {"name": "b4", "type": "A", "value": "nope"}]})
     assert failure["detail"]["index"] == 1
     assert not client.ok("GET", f"/zones/{zid}/records?q=b3.smoke"), "failed batch must roll back"
-
-    # ---- test record
-    answer = client.ok("POST", f"/zones/{zid}/test-record", {"name": "www", "type": "A"})
-    assert answer["response_code"] == "NOERROR" and "198.51.100.99" in answer["values"]
-    assert client.ok("POST", f"/zones/{zid}/test-record", {"name": "missing", "type": "A"})["response_code"] == "NXDOMAIN"
 
     # ---- import / export
     zone_file = "$TTL 1h\nsub1 0s A 10.0.0.1\nsub1 0s A 10.0.0.2\nsub2 IN CNAME smoke.example.\n@ IN NS ns1.ignored.example.\n"

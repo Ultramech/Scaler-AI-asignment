@@ -34,7 +34,7 @@ export const HELP: Record<string, HelpTopic> = {
   "hosted-zone-details": {
     title: "Hosted zone details",
     body: [
-      "The details of the hosted zone include the hosted zone name, ID, description, type, record count, query logging configuration and the four name servers Route 53 assigned to a public hosted zone.",
+      "The details of the hosted zone include the hosted zone name, ID, description, type, record count and the four name servers Route 53 assigned to a public hosted zone.",
     ],
   },
   records: {
@@ -68,32 +68,6 @@ export const HELP: Record<string, HelpTopic> = {
       "If the hosted zone already contains a record that appears in the zone file, the import fails and no records are created.",
     ],
   },
-  "accelerated-recovery": {
-    title: "Accelerated recovery",
-    body: ["Accelerated recovery lets you continue to make changes to the public DNS records of a hosted zone after an impairment to US East (N. Virginia)."],
-  },
-  dnssec: {
-    title: "DNSSEC signing",
-    body: [
-      "DNSSEC signing adds cryptographic signatures to the records in a public hosted zone so resolvers can verify that responses were not tampered with.",
-      "After you enable signing, you must establish a chain of trust by adding a delegation signer (DS) record to the parent zone.",
-    ],
-  },
-  "query-logging": {
-    title: "Query logging",
-    body: ["Route 53 can log information about the queries it receives for a public hosted zone, such as the domain or subdomain that was requested, the date and time, and the DNS record type."],
-  },
-  "test-record": {
-    title: "Test record",
-    body: [
-      "Test record shows how Route 53 responds to DNS queries for a specified record. For geolocation, geoproximity, and latency records, you can also simulate queries from a particular DNS resolver and/or client IP address to find out what response Route 53 would return.",
-    ],
-    important: [
-      "The tool doesn't submit queries to the Domain Name System, it responds based only on the settings in the records in the hosted zone. The tool returns the same information regardless of whether the hosted zone is currently being used to route traffic for the domain.",
-    ],
-    learnMore: "Checking DNS responses from Route 53",
-  },
-  dashboard: { title: "Route 53 Dashboard", body: ["The dashboard summarizes your DNS management, availability monitoring, traffic management and domain registration resources."] },
 };
 
 export const FALLBACK_HELP: HelpTopic = { title: "Info", body: ["This is a local Route 53 console clone. No additional help is available for this section."] };

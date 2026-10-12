@@ -6,9 +6,9 @@ import { TriangleDownIcon, TriangleRightIcon } from "../components/icons";
 import { DeleteZoneModal } from "../components/modals";
 import { BulkAction, recordPanel } from "../components/RecordDetailsPanel";
 import { RecordsTab } from "../components/RecordsTab";
+import { TagsTab } from "../components/TagsTab";
 import { Button, Container, InfoLink, useDisclosure } from "../components/ui";
 import { useZone, ZoneBoundary } from "../components/ZoneBoundary";
-import { DnssecTab, RecoveryTab, TagsTab } from "../components/ZoneTabs";
 import { useConsole } from "../lib/console";
 import { displayName } from "../lib/dns";
 import { useDebounced, useResource } from "../lib/hooks";
@@ -16,7 +16,7 @@ import { paths, ZoneTab } from "../lib/router";
 import type { DnsRecord, Zone } from "../lib/types";
 
 export function ZoneDetailView({ zoneId, tab, record }: { zoneId: string; tab: ZoneTab; record?: number }) {
-  const { api, go, notify } = useConsole();
+  const { api, go, notify, notifyError } = useConsole();
   const zone = useZone(zoneId);
   const [filter, setFilter] = useState("");
   const query = useDebounced(filter, 250);
@@ -62,7 +62,7 @@ export function ZoneDetailView({ zoneId, tab, record }: { zoneId: string; tab: Z
       go(paths.zones());
     } catch (error) {
       setDeleting(false);
-      notify({ type: "error", header: "Unable to delete the hosted zone", content: (error as Error).message });
+      notifyError("Unable to delete the hosted zone", error);
     }
   };
 
@@ -93,8 +93,6 @@ export function ZoneDetailView({ zoneId, tab, record }: { zoneId: string; tab: Z
                 onBulkHandled={() => setBulkRequest(null)}
               />
             )}
-            {tab === "recovery" && <RecoveryTab zone={current} onChanged={zone.reload} />}
-            {tab === "dnssec" && <DnssecTab zone={current} onChanged={zone.reload} />}
             {tab === "tags" && <TagsTab zone={current} onChanged={zone.reload} />}
             {deleting && <DeleteZoneModal zone={current} onCancel={() => setDeleting(false)} onConfirm={removeZone} />}
           </>
@@ -105,7 +103,6 @@ export function ZoneDetailView({ zoneId, tab, record }: { zoneId: string; tab: Z
 }
 
 function ZoneHeader({ zone, onDelete }: { zone: Zone; onDelete: () => void }) {
-  const { go } = useConsole();
   return (
     <header className="zone-header">
       <h1>
@@ -114,8 +111,6 @@ function ZoneHeader({ zone, onDelete }: { zone: Zone; onDelete: () => void }) {
       </h1>
       <div className="page-actions">
         <Button onClick={onDelete}>Delete zone</Button>
-        <Button onClick={() => go(paths.testRecord(zone.id))}>Test record</Button>
-        <Button onClick={() => go(paths.queryLogging(zone.id))}>Configure query logging</Button>
       </div>
     </header>
   );
@@ -143,8 +138,6 @@ function ZoneDetailsCard({ zone }: { zone: Zone }) {
             <dd>{zone.comment || "-"}</dd>
           </div>
           <div className="details-col">
-            <dt>Query log</dt>
-            <dd>{zone.query_log_group || "-"}</dd>
             <dt>Type</dt>
             <dd>{zone.private_zone ? "Private hosted zone" : "Public hosted zone"}</dd>
             <dt>Record count</dt>
@@ -171,8 +164,6 @@ function ZoneDetailsCard({ zone }: { zone: Zone }) {
 
 const TABS: { id: ZoneTab; label: (zone: Zone) => string }[] = [
   { id: "records", label: (zone) => `Records (${zone.record_count})` },
-  { id: "recovery", label: () => "Accelerated recovery" },
-  { id: "dnssec", label: () => "DNSSEC signing" },
   { id: "tags", label: (zone) => `Hosted zone tags (${zone.tags.length})` },
 ];
 

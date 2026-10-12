@@ -44,7 +44,7 @@ export function ImportView({ zoneId }: { zoneId: string }) {
 }
 
 function ImportForm({ zone }: { zone: Zone }) {
-  const { api, go, notify } = useConsole();
+  const { api, go, notify, notifyError } = useConsole();
   const [content, setContent] = useState("");
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [filter, setFilter] = useState("");
@@ -89,7 +89,7 @@ function ImportForm({ zone }: { zone: Zone }) {
       notify({ type: "success", header: `Successfully imported ${result.imported} ${result.imported === 1 ? "record" : "records"} into ${displayName(zone.name)}.` }, 1);
       go(paths.zone(zone.id));
     } catch (error) {
-      notify({ type: "error", header: "Unable to import the zone file", content: (error as Error).message });
+      notifyError("Unable to import the zone file", error);
     } finally {
       setBusy(false);
     }

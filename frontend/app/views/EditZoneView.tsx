@@ -25,7 +25,7 @@ export function EditZoneView({ zoneId }: { zoneId: string }) {
 }
 
 function EditZoneForm({ zone }: { zone: Zone }) {
-  const { api, go, notify } = useConsole();
+  const { api, go, notify, notifyError } = useConsole();
   const [comment, setComment] = useState(zone.comment);
   const [tags, setTags] = useState<Tag[]>(zone.tags);
   const [busy, setBusy] = useState(false);
@@ -43,7 +43,7 @@ function EditZoneForm({ zone }: { zone: Zone }) {
       notify({ type: "success", header: `Successfully updated hosted zone ${displayName(zone.name)}.` }, 1);
       go(paths.zone(zone.id));
     } catch (error) {
-      notify({ type: "error", header: "Unable to save the hosted zone", content: (error as Error).message });
+      notifyError("Unable to save the hosted zone", error);
     } finally {
       setBusy(false);
     }

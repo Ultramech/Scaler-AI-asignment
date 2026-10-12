@@ -27,11 +27,6 @@ def get_db() -> Iterator[Session]:
 # so databases created by an older version get these added on startup.
 ADDED_COLUMNS: dict[str, dict[str, str]] = {
     "hosted_zones": {
-        "query_log_group": "VARCHAR NOT NULL DEFAULT ''",
-        "accelerated_recovery": "BOOLEAN NOT NULL DEFAULT 0",
-        "dnssec_enabled": "BOOLEAN NOT NULL DEFAULT 0",
-        "dnssec_ksk_name": "VARCHAR NOT NULL DEFAULT ''",
-        "dnssec_enabled_at": "DATETIME",
         "vpc_region": "VARCHAR NOT NULL DEFAULT ''",
         "vpc_id": "VARCHAR NOT NULL DEFAULT ''",
     },
@@ -40,6 +35,12 @@ ADDED_COLUMNS: dict[str, dict[str, str]] = {
         "evaluate_target_health": "BOOLEAN NOT NULL DEFAULT 0",
         "set_identifier": "VARCHAR NOT NULL DEFAULT ''",
     },
+}
+
+# Columns of removed features. Databases made by older versions still have them (as NOT NULL without a default,
+# which would make every new zone fail to insert), so they are dropped on startup.
+REMOVED_COLUMNS: dict[str, list[str]] = {
+    "hosted_zones": ["query_log_group", "accelerated_recovery", "dnssec_enabled", "dnssec_ksk_name", "dnssec_enabled_at"],
 }
 
 
@@ -53,3 +54,10 @@ def migrate() -> None:
             for name, ddl in columns.items():
                 if name not in existing:
                     connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
+        for table, columns in REMOVED_COLUMNS.items():
+            if not inspector.has_table(table):
+                continue
+            existing = {column["name"] for column in inspector.get_columns(table)}
+            for name in columns:
+                if name in existing:
+                    connection.execute(text(f"ALTER TABLE {table} DROP COLUMN {name}"))

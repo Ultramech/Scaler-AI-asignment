@@ -429,32 +429,6 @@ await step("export downloads JSON and BIND files", async () => {
 });
 
 console.log("Hosted zone tabs and tools");
-await step("accelerated recovery can be enabled and disabled", async () => {
-  await page.getByRole("tab", { name: "Accelerated recovery" }).click();
-  await page.locator(".status", { hasText: "Disabled" }).waitFor();
-  await page.getByRole("button", { name: "Enable", exact: true }).click();
-  await page.locator(".status", { hasText: "Enabled" }).waitFor();
-  await page.getByRole("button", { name: "Disable", exact: true }).click();
-  await page.locator(".status", { hasText: "Disabled" }).waitFor();
-});
-await step("DNSSEC signing: enable with KSK, view details, disable", async () => {
-  await page.getByRole("tab", { name: "DNSSEC signing" }).click();
-  await page.getByText("You have not enabled DNSSEC signing for this hosted zone").waitFor();
-  await page.getByRole("button", { name: "Enable DNSSEC signing" }).first().click();
-  await page.getByLabel("Key-signing key (KSK) name").fill("my_ksk");
-  await page.getByRole("dialog").getByRole("button", { name: "Enable DNSSEC signing" }).click();
-  await page.locator("tbody tr", { hasText: "my_ksk" }).waitFor();
-  assert.match(await text(".container:has-text(\"DNSSEC signing status\")"), /Signing/);
-  await page.locator("tbody tr", { hasText: "my_ksk" }).locator("input").check();
-  await page.getByRole("button", { name: "View details" }).click();
-  await page.getByRole("dialog").getByText("ECDSAP256SHA256 (13)").waitFor();
-  await page.getByRole("dialog").getByRole("button", { name: "Close" }).first().click();
-  await page.getByRole("button", { name: "Switch to advanced view" }).click();
-  await page.getByRole("columnheader", { name: /Signing algorithm/ }).waitFor();
-  await page.getByRole("button", { name: "Disable DNSSEC signing" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Disable" }).click();
-  await page.getByText("No key-signing keys created.").waitFor();
-});
 await step("tags: manage tags, search", async () => {
   await page.getByRole("tab", { name: /Hosted zone tags/ }).click();
   await page.getByRole("button", { name: "Manage tags" }).click();
@@ -465,30 +439,6 @@ await step("tags: manage tags, search", async () => {
   await page.getByRole("searchbox", { name: "Search", exact: true }).fill("zzz");
   await page.getByText("No tags match your search.").waitFor();
   await page.getByRole("searchbox", { name: "Search", exact: true }).fill("");
-});
-await step("test record returns the simulated response", async () => {
-  await page.getByRole("button", { name: "Test record" }).click();
-  await page.getByRole("heading", { name: "Test record", level: 1 }).waitFor();
-  await page.locator("#test-name").fill("sub1");
-  await page.getByRole("button", { name: "Get response" }).click();
-  await page.getByText("Response returned by Route 53").waitFor();
-  assert.match(await text(".test-result"), /NOERROR/); assert.match(await text(".test-result"), /10\.0\.0\.1/);
-  await page.locator("#test-name").fill("nothere");
-  await page.getByRole("button", { name: "Get response" }).click();
-  await page.getByText("NXDOMAIN").waitFor();
-  await page.getByRole("button", { name: "Cancel" }).click();
-});
-await step("query logging: needs permission, then saves and shows in details", async () => {
-  await page.getByRole("button", { name: "Configure query logging" }).click();
-  await page.getByRole("heading", { name: "Configure query logging" }).first().waitFor();
-  await page.locator("#log-group").fill("/aws/route53/e2e-test.com");
-  await page.getByRole("button", { name: "Create" }).click();
-  await page.getByText(/needs permission from a resource policy/).first().waitFor();
-  await page.getByRole("button", { name: "Grant permissions" }).click();
-  await page.getByRole("button", { name: "Create" }).click();
-  await flash("Successfully configured query logging").waitFor();
-  await page.getByRole("button", { name: "Hosted zone details" }).click();
-  assert.match(await text(".details-card"), /\/aws\/route53\/e2e-test\.com/);
 });
 await step("Info links open the help panel and it can be closed", async () => {
   await page.locator(".zone-header .info-link").click();
@@ -504,12 +454,12 @@ await step("global search finds a record and opens its zone with the row selecte
 });
 
 console.log("Navigation & chrome");
-await step("sidebar placeholders show Coming soon; Dashboard works", async () => {
+await step("sidebar placeholders (Health checks, Dashboard) show Coming soon", async () => {
   await page.getByRole("link", { name: "Health checks" }).click();
   await page.getByText("Coming soon").waitFor();
   await page.getByRole("link", { name: "Dashboard" }).click();
-  await page.getByRole("heading", { name: /Route 53 Dashboard/ }).waitFor();
-  await page.waitForFunction(() => /DNS management\s*\d+\s*Hosted zones?/.test(document.querySelector(".summary")?.textContent?.replace(/\s+/g, " ") ?? ""));
+  await page.getByRole("heading", { name: "Dashboard" }).waitFor();
+  await page.getByText("Coming soon").waitFor();
   await page.getByRole("link", { name: "Hosted zones", exact: true }).first().click();
 });
 await step("browser back/forward follows the hash routes", async () => {
@@ -527,16 +477,9 @@ await step("hamburger toggles the navigation drawer", async () => {
   assert.equal(await page.locator(".sidebar").count(), 0);
   await page.getByRole("button", { name: "Open navigation drawer" }).click();
 });
-await step("details panel toggles and can be moved to the bottom", async () => {
+await step("details panel toggles", async () => {
   await page.getByRole("button", { name: "Toggle details panel" }).click();
   await page.getByText("0 records selected").waitFor();
-  await page.getByRole("button", { name: "Panel preferences" }).click();
-  await page.getByRole("dialog").getByLabel("Bottom").check();
-  await page.getByRole("button", { name: "Confirm" }).click();
-  assert.equal(await page.locator(".tools-bottom").count(), 1);
-  await page.getByRole("button", { name: "Panel preferences" }).click();
-  await page.getByRole("dialog").getByLabel("Side").check();
-  await page.getByRole("button", { name: "Confirm" }).click();
   await page.getByRole("button", { name: "Close panel" }).click();
 });
 await step("account menu works at human click speed (mouse held 300 ms)", async () => {

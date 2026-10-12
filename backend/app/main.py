@@ -9,20 +9,16 @@ from sqlalchemy.orm import Session, selectinload
 
 from . import dns
 from .db import Base, SessionLocal, engine, get_db, migrate
-from .models import DNSRecord, HostedZone, HostedZoneTag, utcnow
+from .models import DNSRecord, HostedZone, HostedZoneTag
 from .schemas import (
-    AcceleratedRecoveryInput,
     BulkRecordInput,
     BulkTtlInput,
-    DnssecInput,
     ImportInput,
     LoginInput,
-    QueryLoggingInput,
     RecordBatchInput,
     RecordInput,
     TagInput,
     TagsInput,
-    TestRecordInput,
     ZoneCreate,
     ZoneUpdate,
 )
@@ -51,15 +47,6 @@ def zone_dict(zone: HostedZone) -> dict:
         "record_count": len(zone.records),
         "tags": [{"key": tag.key, "value": tag.value} for tag in zone.tags],
         "name_servers": apex_ns.value.splitlines() if apex_ns else [],
-        "query_log_group": zone.query_log_group,
-        "accelerated_recovery": zone.accelerated_recovery,
-        "dnssec": {
-            "enabled": zone.dnssec_enabled,
-            "status": "Signing" if zone.dnssec_enabled else "Not signing",
-            "keys": [{"name": zone.dnssec_ksk_name, "status": "Active", "created_at": zone.dnssec_enabled_at}]
-            if zone.dnssec_enabled
-            else [],
-        },
     }
 
 
@@ -294,75 +281,6 @@ def update_tags(zone_id: str, payload: TagsInput, db: Session = Depends(get_db),
     db.commit()
     db.refresh(zone)
     return zone_dict(zone)
-
-
-@app.put("/zones/{zone_id}/query-logging")
-def configure_query_logging(zone_id: str, payload: QueryLoggingInput, db: Session = Depends(get_db), _: str = Depends(current_user)):
-    zone = get_zone(db, zone_id)
-    if zone.private_zone:
-        raise HTTPException(400, "Query logging for private hosted zones is configured through Resolver query logging.")
-    zone.query_log_group = payload.log_group
-    db.commit()
-    db.refresh(zone)
-    return zone_dict(zone)
-
-
-@app.delete("/zones/{zone_id}/query-logging")
-def remove_query_logging(zone_id: str, db: Session = Depends(get_db), _: str = Depends(current_user)):
-    zone = get_zone(db, zone_id)
-    zone.query_log_group = ""
-    db.commit()
-    db.refresh(zone)
-    return zone_dict(zone)
-
-
-@app.put("/zones/{zone_id}/accelerated-recovery")
-def set_accelerated_recovery(zone_id: str, payload: AcceleratedRecoveryInput, db: Session = Depends(get_db), _: str = Depends(current_user)):
-    zone = get_zone(db, zone_id)
-    if zone.private_zone:
-        raise HTTPException(400, "Accelerated recovery is only available for public hosted zones.")
-    zone.accelerated_recovery = payload.enabled
-    db.commit()
-    db.refresh(zone)
-    return zone_dict(zone)
-
-
-@app.put("/zones/{zone_id}/dnssec")
-def set_dnssec(zone_id: str, payload: DnssecInput, db: Session = Depends(get_db), _: str = Depends(current_user)):
-    zone = get_zone(db, zone_id)
-    if zone.private_zone:
-        raise HTTPException(400, "DNSSEC signing is only available for public hosted zones.")
-    zone.dnssec_enabled = payload.enabled
-    zone.dnssec_ksk_name = (payload.ksk_name.strip() or f"ksk_{zone.id[-6:].lower()}") if payload.enabled else ""
-    zone.dnssec_enabled_at = utcnow() if payload.enabled else None
-    db.commit()
-    db.refresh(zone)
-    return zone_dict(zone)
-
-
-@app.post("/zones/{zone_id}/test-record")
-def test_record(zone_id: str, payload: TestRecordInput, db: Session = Depends(get_db), _: str = Depends(current_user)):
-    """Simulate how Route 53 would answer a query. No DNS traffic is sent."""
-    zone = get_zone(db, zone_id)
-    record_type = payload.type.strip().upper()
-    if record_type not in dns.RECORD_TYPES + ("SOA",):
-        raise HTTPException(400, f"Record type {payload.type} is not supported.")
-    name = dns.record_fqdn(zone, payload.name)
-    records = [r for r in zone.records if r.name == name]
-    if not records:
-        wildcard = "*." + name.split(".", 1)[1] if "." in name.rstrip(".") else ""
-        records = [r for r in zone.records if r.name == wildcard]
-    answers = [r for r in records if r.type == record_type] or [r for r in records if r.type == "CNAME" and record_type != "CNAME"]
-    code = "NOERROR" if records else "NXDOMAIN"
-    return {
-        "response_code": code,
-        "protocol": "UDP",
-        "record_name": name,
-        "record_type": answers[0].type if answers else record_type,
-        "resolver_ip": payload.resolver_ip.strip(),
-        "ttl": answers[0].ttl if answers else None,
-        "values": [value for record in answers for value in record.value.splitlines()],
-    }
 
 
 # -------------------------------------------------------------------- records

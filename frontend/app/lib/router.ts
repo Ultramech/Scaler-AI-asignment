@@ -11,13 +11,10 @@ export type Route =
   | { name: "record-create"; id: string }
   | { name: "record-edit"; id: string; recordId: number }
   | { name: "import"; id: string }
-  | { name: "query-logging"; id: string }
-  | { name: "test-record"; id: string }
-  | { name: "dashboard" }
   | { name: "mock"; slug: string };
 
-export type ZoneTab = "records" | "recovery" | "dnssec" | "tags";
-const TABS: ZoneTab[] = ["records", "recovery", "dnssec", "tags"];
+const TABS = ["records", "tags"] as const;
+export type ZoneTab = (typeof TABS)[number];
 
 export const paths = {
   zones: () => "/hostedzones",
@@ -33,9 +30,6 @@ export const paths = {
   recordCreate: (id: string) => `/hostedzones/${id}/records/create`,
   recordEdit: (id: string, recordId: number) => `/hostedzones/${id}/records/${recordId}/edit`,
   importZoneFile: (id: string) => `/hostedzones/${id}/import`,
-  queryLogging: (id: string) => `/hostedzones/${id}/query-logging`,
-  testRecord: (id: string) => `/hostedzones/${id}/test-record`,
-  dashboard: () => "/dashboard",
   mock: (slug: string) => `/${slug}`,
 };
 
@@ -43,15 +37,14 @@ export function slugify(label: string) {
   return label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-export function parseRoute(hash: string): Route {
+function parseRoute(hash: string): Route {
   const [pathname, search = ""] = hash.replace(/^#/, "").split("?");
   const query = new URLSearchParams(search);
   const parts = pathname.split("/").filter(Boolean);
-  if (parts.length === 0 || (parts[0] === "hostedzones" && parts.length === 1)) return { name: "zones" };
-  if (parts[0] === "dashboard") return { name: "dashboard" };
-  if (parts[0] !== "hostedzones") return { name: "mock", slug: parts[0] };
-  if (parts[1] === "create") return { name: "zone-create" };
-  const id = parts[1];
+  const [section, id] = parts;
+  if (!section || (section === "hostedzones" && !id)) return { name: "zones" };
+  if (section !== "hostedzones") return { name: "mock", slug: section };
+  if (id === "create") return { name: "zone-create" };
   const rest = parts.slice(2).join("/");
   if (rest === "") {
     const tab = TABS.find((candidate) => candidate === query.get("tab")) ?? "records";
@@ -61,8 +54,6 @@ export function parseRoute(hash: string): Route {
   if (rest === "edit") return { name: "zone-edit", id };
   if (rest === "records/create") return { name: "record-create", id };
   if (rest === "import") return { name: "import", id };
-  if (rest === "query-logging") return { name: "query-logging", id };
-  if (rest === "test-record") return { name: "test-record", id };
   const edit = rest.match(/^records\/(\d+)\/edit$/);
   if (edit) return { name: "record-edit", id, recordId: Number(edit[1]) };
   return { name: "zones" };
@@ -79,10 +70,6 @@ function subscribe(callback: () => void) {
 }
 
 /** The raw hash is the snapshot so React compares a stable string, then it is parsed on render. */
-export function useHash(): string {
-  return useSyncExternalStore(subscribe, () => location.hash, () => "");
-}
-
 export function useRoute(): Route {
-  return parseRoute(useHash());
+  return parseRoute(useSyncExternalStore(subscribe, () => location.hash, () => ""));
 }

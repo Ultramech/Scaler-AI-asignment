@@ -30,19 +30,6 @@ class TagsInput(BaseModel):
     tags: list[TagInput] = Field(default_factory=list, max_length=50)
 
 
-class QueryLoggingInput(BaseModel):
-    log_group: str = Field(min_length=1, max_length=512, pattern=r"^[A-Za-z0-9._/#-]+$")
-
-
-class AcceleratedRecoveryInput(BaseModel):
-    enabled: bool
-
-
-class DnssecInput(BaseModel):
-    enabled: bool
-    ksk_name: str = Field(default="", max_length=128)
-
-
 class RecordInput(BaseModel):
     name: str = Field(default="", max_length=255)
     type: str
@@ -69,9 +56,3 @@ class BulkRecordInput(BaseModel):
 class BulkTtlInput(BaseModel):
     ids: list[int] = Field(min_length=1)
     ttl: int = Field(ge=0, le=2147483647)
-
-
-class TestRecordInput(BaseModel):
-    name: str = ""
-    type: str = "A"
-    resolver_ip: str = ""

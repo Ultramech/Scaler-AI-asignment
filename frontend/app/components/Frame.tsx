@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { useConsole } from "../lib/console";
-import { useDebounced } from "../lib/hooks";
+import { useDebounced, useDismiss } from "../lib/hooks";
 import { FALLBACK_HELP, HELP } from "../lib/help";
 import { paths, slugify } from "../lib/router";
 import type { SearchResult } from "../lib/types";
@@ -13,7 +13,6 @@ import {
   ChevronRightIcon,
   CloseIcon,
   ExternalIcon,
-  GearIcon,
   GridIcon,
   HelpCircleIcon,
   InfoCircleIcon,
@@ -125,21 +124,7 @@ function Topbar() {
   }, []);
 
   // Close the account menu on an outside click or Escape. (Closing on blur would race with the click on a menu item.)
-  useEffect(() => {
-    if (!account) return;
-    const onPointerDown = (event: PointerEvent) => {
-      if (!accountRef.current?.contains(event.target as Node)) setAccount(false);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setAccount(false);
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [account]);
+  useDismiss(accountRef, account, setAccount);
 
   const choose = (result: SearchResult) => {
     setQuery("");
@@ -236,7 +221,7 @@ function Topbar() {
 
 type NavItem = { label: string; to?: string; isNew?: boolean };
 const NAV: (NavItem | { group: string; items: NavItem[] })[] = [
-  { label: "Dashboard", to: paths.dashboard() },
+  { label: "Dashboard" },
   { label: "Hosted zones", to: paths.zones() },
   { label: "Health checks" },
   { label: "Profiles" },
@@ -333,24 +318,18 @@ function HelpPanel({ topic, onClose }: { topic: string; onClose: () => void }) {
         )}
         <h3>Was this content helpful?</h3>
         <div className="help-vote">
-          <Button
-            onClick={() => {
-              setVoted("yes");
-              notify({ type: "success", header: "Thanks for your feedback." });
-            }}
-            aria-pressed={voted === "yes"}
-          >
-            <ThumbsUpIcon size={14} /> Yes
-          </Button>
-          <Button
-            onClick={() => {
-              setVoted("no");
-              notify({ type: "success", header: "Thanks for your feedback." });
-            }}
-            aria-pressed={voted === "no"}
-          >
-            <ThumbsDownIcon size={14} /> No
-          </Button>
+          {(["yes", "no"] as const).map((vote) => (
+            <Button
+              key={vote}
+              onClick={() => {
+                setVoted(vote);
+                notify({ type: "success", header: "Thanks for your feedback." });
+              }}
+              aria-pressed={voted === vote}
+            >
+              {vote === "yes" ? <ThumbsUpIcon size={14} /> : <ThumbsDownIcon size={14} />} {vote === "yes" ? "Yes" : "No"}
+            </Button>
+          ))}
         </div>
         {content.learnMore && (
           <>
@@ -365,37 +344,6 @@ function HelpPanel({ topic, onClose }: { topic: string; onClose: () => void }) {
         )}
       </div>
     </>
-  );
-}
-
-function PanelPositionModal({ value, onConfirm, onCancel }: { value: "side" | "bottom"; onConfirm: (value: "side" | "bottom") => void; onCancel: () => void }) {
-  const [draft, setDraft] = useState(value);
-  return (
-    <Modal
-      title="Split panel preferences"
-      size="small"
-      onClose={onCancel}
-      footer={
-        <>
-          <Button variant="link" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={() => onConfirm(draft)}>
-            Confirm
-          </Button>
-        </>
-      }
-    >
-      <fieldset>
-        <legend>Panel position</legend>
-        {(["side", "bottom"] as const).map((position) => (
-          <label key={position} className="radio-row">
-            <input type="radio" name="panel-position" checked={draft === position} onChange={() => setDraft(position)} />
-            {position === "side" ? "Side" : "Bottom"}
-          </label>
-        ))}
-      </fieldset>
-    </Modal>
   );
 }
 
@@ -424,8 +372,6 @@ export function Frame({ crumbs, activeNav, navOpen = true, tools, toolsOpen = fa
   const { go, help, openHelp, closeHelp } = useConsole();
   const [nav, setNav] = useState(navOpen);
   const [toolsVisible, setToolsVisible] = useState(toolsOpen);
-  const [position, setPosition] = useState<"side" | "bottom">("side");
-  const [positionDialog, setPositionDialog] = useState(false);
 
   // On narrow screens the drawer overlays the page, so it starts closed there.
   useEffect(() => setNav(navOpen && window.matchMedia("(min-width: 1001px)").matches), [navOpen]);
@@ -434,18 +380,10 @@ export function Frame({ crumbs, activeNav, navOpen = true, tools, toolsOpen = fa
     if (openSignal) setToolsVisible(true);
   }, [openSignal]);
   useEffect(() => {
-    try {
-      setPosition(localStorage.getItem("r53-panel-position") === "bottom" ? "bottom" : "side");
-    } catch {
-      /* ignore */
-    }
-  }, []);
-  useEffect(() => {
     if (help) setToolsVisible(true);
   }, [help]);
 
   const showingHelp = help !== null || !tools;
-  const panelOpen = toolsVisible;
   const togglePanel = () => {
     if (toolsVisible) {
       closeHelp();
@@ -455,7 +393,6 @@ export function Frame({ crumbs, activeNav, navOpen = true, tools, toolsOpen = fa
       setToolsVisible(true);
     }
   };
-  const splitBottom = !showingHelp && position === "bottom";
 
   return (
     <div className="app">
@@ -487,11 +424,11 @@ export function Frame({ crumbs, activeNav, navOpen = true, tools, toolsOpen = fa
           </ol>
         </nav>
         <span className="crumb-spacer" />
-        <IconButton label={tools ? "Toggle details panel" : "Toggle help panel"} className={`crumb-panel ${panelOpen ? "open" : ""}`} aria-pressed={panelOpen} onClick={togglePanel}>
+        <IconButton label={tools ? "Toggle details panel" : "Toggle help panel"} className={`crumb-panel ${toolsVisible ? "open" : ""}`} aria-pressed={toolsVisible} onClick={togglePanel}>
           {tools ? <PanelIcon size={18} /> : <InfoCircleIcon size={18} />}
         </IconButton>
       </div>
-      <div className={`frame-body ${splitBottom ? "split-bottom" : ""}`}>
+      <div className="frame-body">
         <div className="frame-row">
           {nav && <Sidebar active={activeNav} onCollapse={() => setNav(false)} />}
           <main className="content">
@@ -501,7 +438,7 @@ export function Frame({ crumbs, activeNav, navOpen = true, tools, toolsOpen = fa
             </div>
             {actionBar && <div className="action-bar">{actionBar}</div>}
           </main>
-          {panelOpen && !splitBottom && (
+          {toolsVisible && (
             <aside className="tools" aria-label={showingHelp ? "Help panel" : "Details panel"}>
               {showingHelp ? (
                 <HelpPanel
@@ -516,9 +453,6 @@ export function Frame({ crumbs, activeNav, navOpen = true, tools, toolsOpen = fa
                   <div className="tools-header">
                     <h2>{tools!.title}</h2>
                     <div className="tools-header-actions">
-                      <IconButton label="Panel preferences" onClick={() => setPositionDialog(true)}>
-                        <GearIcon size={16} />
-                      </IconButton>
                       <IconButton label="Close panel" onClick={() => setToolsVisible(false)}>
                         <ChevronRightIcon size={16} />
                       </IconButton>
@@ -530,39 +464,8 @@ export function Frame({ crumbs, activeNav, navOpen = true, tools, toolsOpen = fa
             </aside>
           )}
         </div>
-        {panelOpen && splitBottom && (
-          <aside className="tools tools-bottom" aria-label="Details panel">
-            <div className="tools-header">
-              <h2>{tools!.title}</h2>
-              <div className="tools-header-actions">
-                <IconButton label="Panel preferences" onClick={() => setPositionDialog(true)}>
-                  <GearIcon size={16} />
-                </IconButton>
-                <IconButton label="Close panel" onClick={() => setToolsVisible(false)}>
-                  <CloseIcon size={16} />
-                </IconButton>
-              </div>
-            </div>
-            <div className="tools-body">{tools!.content}</div>
-          </aside>
-        )}
       </div>
       <FrameFooter />
-      {positionDialog && (
-        <PanelPositionModal
-          value={position}
-          onCancel={() => setPositionDialog(false)}
-          onConfirm={(next) => {
-            setPosition(next);
-            setPositionDialog(false);
-            try {
-              localStorage.setItem("r53-panel-position", next);
-            } catch {
-              /* ignore */
-            }
-          }}
-        />
-      )}
     </div>
   );
 }

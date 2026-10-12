@@ -29,11 +29,6 @@ class HostedZone(Base):
     vpc_region: Mapped[str] = mapped_column(String, default="")
     vpc_id: Mapped[str] = mapped_column(String, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
-    query_log_group: Mapped[str] = mapped_column(String, default="")
-    accelerated_recovery: Mapped[bool] = mapped_column(Boolean, default=False)
-    dnssec_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
-    dnssec_ksk_name: Mapped[str] = mapped_column(String, default="")
-    dnssec_enabled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     records: Mapped[list["DNSRecord"]] = relationship(back_populates="zone", cascade="all, delete-orphan")
     tags: Mapped[list["HostedZoneTag"]] = relationship(
         back_populates="zone", cascade="all, delete-orphan", order_by="HostedZoneTag.id"

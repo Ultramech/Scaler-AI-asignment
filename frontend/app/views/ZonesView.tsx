@@ -46,7 +46,7 @@ function ZoneLink({ zone }: { zone: Zone }) {
 }
 
 export function ZonesView() {
-  const { api, go, notify } = useConsole();
+  const { api, go, notify, notifyError } = useConsole();
   const [filter, setFilter] = useState("");
   const query = useDebounced(filter, 250);
   const zones = useResource(() => api.get<Zone[]>(`/zones?q=${encodeURIComponent(query)}`), [query, api]);
@@ -100,7 +100,7 @@ export function ZonesView() {
       zones.reload();
     } catch (error) {
       setDeleting(null);
-      notify({ type: "error", header: "Unable to delete the hosted zone", content: (error as Error).message });
+      notifyError("Unable to delete the hosted zone", error);
     }
   };
 

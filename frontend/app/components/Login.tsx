@@ -1,35 +1,29 @@
 "use client";
 
-import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
+import { FormEvent, ReactNode, useRef, useState } from "react";
 import { API_URL } from "../lib/api";
+import { useDismiss } from "../lib/hooks";
 import { AwsLogo, ChevronLeftIcon, TriangleDownIcon } from "./icons";
-import { Alert, Button, Modal } from "./ui";
+import { Alert } from "./ui";
 
 export type Session = { token: string; user: { email: string; name: string } };
 
 type UserType = "root" | "iam";
+type Step = "identify" | "password";
+
+const USER_TYPES: { type: UserType; title: string; description: string }[] = [
+  { type: "root", title: "Root user", description: "Account owner that performs tasks requiring unrestricted access." },
+  { type: "iam", title: "IAM user", description: "User within an account that performs daily tasks." },
+];
 
 /** Set on the hosted demo (free hosting that sleeps) so the sign-in page can link to it. Not set locally, so the note is hidden there. */
 const HEALTH_URL = process.env.NEXT_PUBLIC_API_HEALTH_URL;
-type Step = "identify" | "password";
 
 /** A blue "label ▾" link in the top-right corner that opens a small menu. */
 function TopMenu({ label, children }: { label: string; children: (close: () => void) => ReactNode }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useDismiss(ref, open, setOpen);
   return (
     <div className="signin-topmenu" ref={ref}>
       <button type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
@@ -41,47 +35,6 @@ function TopMenu({ label, children }: { label: string; children: (close: () => v
         </div>
       )}
     </div>
-  );
-}
-
-function FeedbackModal({ onClose }: { onClose: () => void }) {
-  const [text, setText] = useState("");
-  const [sent, setSent] = useState(false);
-  return (
-    <Modal
-      title="Provide feedback"
-      size="small"
-      onClose={onClose}
-      footer={
-        sent ? (
-          <Button variant="primary" onClick={onClose}>
-            Close
-          </Button>
-        ) : (
-          <>
-            <Button variant="link" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button variant="primary" disabled={!text.trim()} onClick={() => setSent(true)}>
-              Submit
-            </Button>
-          </>
-        )
-      }
-    >
-      {sent ? (
-        <Alert type="success" header="Thanks for your feedback">
-          In this local demo feedback isn&apos;t sent anywhere.
-        </Alert>
-      ) : (
-        <>
-          <label htmlFor="feedback-text" className="signin-feedback-label">
-            Tell us about your sign-in experience
-          </label>
-          <textarea id="feedback-text" className="text-input wide" rows={5} value={text} onChange={(event) => setText(event.target.value)} autoFocus />
-        </>
-      )}
-    </Modal>
   );
 }
 
@@ -100,7 +53,6 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState(false);
   const [multiSession, setMultiSession] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -142,12 +94,15 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
     setError("");
   };
 
+  const errorMessage = error && (
+    <p className="signin-error" role="alert">
+      {error}
+    </p>
+  );
+
   return (
     <div className="signin-page">
       <div className="signin-top">
-        <button type="button" className="signin-toplink" onClick={() => setFeedback(true)}>
-          Provide feedback
-        </button>
         <TopMenu label={multiSession ? "Multi-session enabled" : "Multi-session disabled"}>
           {(close) => (
             <>
@@ -203,20 +158,15 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
                     (not sure?)
                   </a>
                 </legend>
-                <label className={`signin-tile ${userType === "root" ? "selected" : ""}`}>
-                  <input type="radio" name="user-type" checked={userType === "root"} onChange={() => chooseType("root")} />
-                  <span>
-                    Root user
-                    <small>Account owner that performs tasks requiring unrestricted access.</small>
-                  </span>
-                </label>
-                <label className={`signin-tile ${userType === "iam" ? "selected" : ""}`}>
-                  <input type="radio" name="user-type" checked={userType === "iam"} onChange={() => chooseType("iam")} />
-                  <span>
-                    IAM user
-                    <small>User within an account that performs daily tasks.</small>
-                  </span>
-                </label>
+                {USER_TYPES.map(({ type, title, description }) => (
+                  <label key={type} className={`signin-tile ${userType === type ? "selected" : ""}`}>
+                    <input type="radio" name="user-type" checked={userType === type} onChange={() => chooseType(type)} />
+                    <span>
+                      {title}
+                      <small>{description}</small>
+                    </span>
+                  </label>
+                ))}
               </fieldset>
               {userType === "root" ? (
                 <label className="signin-field">
@@ -229,11 +179,7 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
                   <input value={account} onChange={(event) => setAccount(event.target.value)} placeholder="123456789012" autoComplete="off" autoFocus />
                 </label>
               )}
-              {error && (
-                <p className="signin-error" role="alert">
-                  {error}
-                </p>
-              )}
+              {errorMessage}
               <button type="submit" className="signin-primary">
                 Next
               </button>
@@ -262,11 +208,7 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
                   {userType === "root" ? "Forgot password?" : "Having trouble?"}
                 </button>
               </div>
-              {error && (
-                <p className="signin-error" role="alert">
-                  {error}
-                </p>
-              )}
+              {errorMessage}
               <button type="submit" className="signin-primary" disabled={busy}>
                 {busy ? "Signing in…" : "Sign in"}
               </button>
@@ -312,7 +254,6 @@ export function Login({ onSignedIn }: { onSignedIn: (session: Session) => void }
       </div>
 
       <footer className="signin-footer">© 2026 Amazon Web Services, Inc. or its affiliates. All rights reserved.</footer>
-      {feedback && <FeedbackModal onClose={() => setFeedback(false)} />}
     </div>
   );
 }

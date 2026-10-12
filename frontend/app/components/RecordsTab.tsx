@@ -43,7 +43,7 @@ type Props = {
 };
 
 export function RecordsTab({ zone, records, filter, onFilter, selected, onSelect, onChanged, bulkRequest, onBulkHandled }: Props) {
-  const { api, go, notify } = useConsole();
+  const { api, go, notify, notifyError } = useConsole();
   const [type, setType] = useState("");
   const [policy, setPolicy] = useState("");
   const [alias, setAlias] = useState("");
@@ -109,7 +109,7 @@ export function RecordsTab({ zone, records, filter, onFilter, selected, onSelect
       onChanged();
     } catch (error) {
       setDeleting(null);
-      notify({ type: "error", header: "Unable to delete the record", content: (error as Error).message });
+      notifyError("Unable to delete the record", error);
     }
   };
 
@@ -125,7 +125,7 @@ export function RecordsTab({ zone, records, filter, onFilter, selected, onSelect
       records.reload();
     } catch (error) {
       setChangingTtl(false);
-      notify({ type: "error", header: "Unable to change the TTL", content: (error as Error).message });
+      notifyError("Unable to change the TTL", error);
     }
   };
 
@@ -256,7 +256,7 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
 
 /** Bonus feature: download the zone as JSON or a BIND zone file. */
 function ExportBar({ zone }: { zone: Zone }) {
-  const { api, notify } = useConsole();
+  const { api, notify, notifyError } = useConsole();
   const download = async (format: "json" | "bind") => {
     try {
       const content = format === "json" ? JSON.stringify(await api.get(`/zones/${zone.id}/export?format=json`), null, 2) : await api.text(`/zones/${zone.id}/export?format=bind`);
@@ -267,7 +267,7 @@ function ExportBar({ zone }: { zone: Zone }) {
       URL.revokeObjectURL(link.href);
       notify({ type: "success", header: `Exported ${displayName(zone.name)} as ${format === "json" ? "JSON" : "a BIND zone file"}.` });
     } catch (error) {
-      notify({ type: "error", header: "Export failed", content: (error as Error).message });
+      notifyError("Export failed", error);
     }
   };
   return (
