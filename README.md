@@ -74,7 +74,7 @@
 **Authentication (mocked).** A sign-in page modelled on the real AWS one: root user (email address, then password) or IAM user (account ID or alias, then username and password), with the multi-session and language links, the cube background and the promo panel. Any credentials are accepted: IAM, accounts and billing are intentionally mocked. The session survives reloads and *Sign out* clears it.
 
 **Hosted zones**
-- Table with search, sortable and resizable columns, pagination, single selection, and a *Preferences* dialog (page size, wrap lines, search mode, visible columns).
+- Table with search, sortable columns, pagination, single selection, and a *Preferences* dialog (page size, wrap lines, search mode, visible columns).
 - Create public or private zones (private zones take a VPC), with description and tags. Domain names are validated and duplicates are rejected. Every zone starts with an apex `NS` and `SOA` record, like Route 53.
 - Zone page: collapsible details (ID, description, type, record count, name servers) and the *Records* and *Hosted zone tags* tabs.
 - Edit the description and tags, delete behind a "type `delete` to confirm" dialog, *Manage tags*.
@@ -149,7 +149,7 @@ backend/tests  smoke.py: end-to-end API test on a temporary database
 frontend/app
   page.tsx     session handling and route switch
   lib/         API client, hash router, console context (theme, notifications, help), hooks
-  components/  common/ (ui, icons, DataTable, modals), layout/ (Frame, preferences),
+  components/  common/ (ui, icons, DataTable, modals), layout/ (Frame, Topbar, Sidebar, help panel, preferences),
                auth/ (Login), zones/ (zone boundary, tags), records/ (records tab, form, details panel)
   views/       one file per page (zones, zone detail, create/edit zone, record forms, import, ...)
   styles/      design tokens plus frame, component and page CSS

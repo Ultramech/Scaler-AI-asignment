@@ -1,6 +1,7 @@
 "use client";
 
-import { Frame, navLabelForSlug } from "../components/layout/Frame";
+import { Frame } from "../components/layout/Frame";
+import { navLabelForSlug } from "../components/layout/Sidebar";
 import { Button, Container } from "../components/common/ui";
 import { useConsole } from "../lib/console";
 import { paths } from "../lib/router";

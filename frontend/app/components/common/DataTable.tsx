@@ -1,12 +1,12 @@
 "use client";
 
-import { ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import { TriangleDownIcon, TriangleDownOutlineIcon, TriangleUpIcon } from "./icons";
 
 export type Column<T> = {
   id: string;
   header: string;
-  /** Initial width in pixels; users can drag the column edge to resize. */
+  /** Column width in pixels. */
   width: number;
   cell: (row: T) => ReactNode;
   sortValue?: (row: T) => string | number;
@@ -30,7 +30,7 @@ export function useSort<T>(rows: T[], columns: Column<T>[], initial: SortState =
       return order * direction;
     });
   }, [rows, columns, sort]);
-  const toggle = useCallback((id: string) => setSort((current) => (current?.id === id ? { id, desc: !current.desc } : { id, desc: false })), []);
+  const toggle = (id: string) => setSort((current) => ({ id, desc: current?.id === id && !current.desc }));
   return { sorted, sort, toggle };
 }
 
@@ -53,35 +53,14 @@ type DataTableProps<T> = {
 };
 
 export function DataTable<T>({ columns, rows, rowKey, rowLabel, label, sort, onSort, selection, selected = new Set(), onSelectionChange, hidden = [], wrapLines = false, loading, empty }: DataTableProps<T>) {
-  const [widths, setWidths] = useState<Record<string, number>>({});
   const visible = columns.filter((column) => !hidden.includes(column.id));
-  const widthOf = (column: Column<T>) => widths[column.id] ?? column.width;
-  const total = visible.reduce((sum, column) => sum + widthOf(column), selection ? 44 : 0);
-  const dragging = useRef<{ id: string; startX: number; startWidth: number } | null>(null);
-
-  const startResize = (event: React.MouseEvent, column: Column<T>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    dragging.current = { id: column.id, startX: event.clientX, startWidth: widthOf(column) };
-    const move = (moveEvent: MouseEvent) => {
-      const drag = dragging.current;
-      if (drag) setWidths((current) => ({ ...current, [drag.id]: Math.max(60, drag.startWidth + moveEvent.clientX - drag.startX) }));
-    };
-    const stop = () => {
-      dragging.current = null;
-      document.removeEventListener("mousemove", move);
-      document.removeEventListener("mouseup", stop);
-    };
-    document.addEventListener("mousemove", move);
-    document.addEventListener("mouseup", stop);
-  };
+  const total = visible.reduce((sum, column) => sum + column.width, selection ? 44 : 0);
 
   const toggleRow = (key: Key) => {
     if (!selection || !onSelectionChange) return;
     if (selection === "single") return onSelectionChange(new Set([key]));
     const next = new Set(selected);
-    if (next.has(key)) next.delete(key);
-    else next.add(key);
+    if (!next.delete(key)) next.add(key);
     onSelectionChange(next);
   };
 
@@ -94,7 +73,7 @@ export function DataTable<T>({ columns, rows, rowKey, rowLabel, label, sort, onS
         <colgroup>
           {selection && <col style={{ width: 44 }} />}
           {visible.map((column) => (
-            <col key={column.id} style={{ width: widthOf(column) }} />
+            <col key={column.id} style={{ width: column.width }} />
           ))}
         </colgroup>
         <thead>
@@ -127,7 +106,6 @@ export function DataTable<T>({ columns, rows, rowKey, rowLabel, label, sort, onS
                       )}
                     </button>
                   </div>
-                  <span className="resizer" role="separator" aria-orientation="vertical" onMouseDown={(event) => startResize(event, column)} />
                 </th>
               );
             })}

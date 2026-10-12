@@ -704,28 +704,14 @@ fieldset legend {
   color: var(--text);
 }
 
-.resizer {
+.data-table th:not(.select-cell)::after {
+  content: "";
   position: absolute;
   right: 0;
   top: 8px;
   bottom: 8px;
-  width: 9px;
-  cursor: col-resize;
-}
-
-.resizer::after {
-  content: "";
-  position: absolute;
-  right: 3px;
-  top: 0;
-  bottom: 0;
   width: 1px;
   background: var(--border);
-}
-
-.resizer:hover::after {
-  background: var(--blue);
-  width: 2px;
 }
 
 .data-table td {
