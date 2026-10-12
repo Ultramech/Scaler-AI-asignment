@@ -1,7 +1,7 @@
 "use client";
 
 import { ButtonHTMLAttributes, ReactNode, RefObject, useEffect, useRef, useState } from "react";
-import { useConsole } from "../lib/console";
+import { useConsole } from "../../lib/console";
 import {
   CheckCircleIcon,
   ChevronLeftIcon,
@@ -11,18 +11,17 @@ import {
   ErrorCircleIcon,
   GearIcon,
   InfoCircleIcon,
-  MinusCircleIcon,
   SearchIcon,
   WarningIcon,
 } from "./icons";
 
 /* ------------------------------------------------------------------ buttons */
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "normal" | "primary" | "link" | "inline-link" };
+type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className"> & { variant?: "normal" | "primary" | "link" };
 
-export function Button({ variant = "normal", className = "", type = "button", children, ...rest }: ButtonProps) {
+export function Button({ variant = "normal", type = "button", children, ...rest }: ButtonProps) {
   return (
-    <button type={type} className={`btn btn-${variant} ${className}`} {...rest}>
+    <button type={type} className={`btn btn-${variant}`} {...rest}>
       {children}
     </button>
   );
@@ -77,28 +76,10 @@ export function Modal({ title, onClose, footer, children, size = "medium" }: { t
   const dialog = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null;
     dialog.current?.querySelector<HTMLElement>("input:not([disabled]), button.btn-primary, .modal-close")?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-      if (event.key !== "Tab" || !dialog.current) return;
-      const focusable = [...dialog.current.querySelectorAll<HTMLElement>("button:not([disabled]), input:not([disabled]), select, textarea, a[href]")];
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      previous?.focus?.();
-    };
+    return () => document.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -156,20 +137,11 @@ export function Flashbar() {
   );
 }
 
-export function StatusIndicator({ kind, children }: { kind: "success" | "error" | "stopped" | "info"; children: ReactNode }) {
-  const Icon = { success: CheckCircleIcon, error: ErrorCircleIcon, stopped: MinusCircleIcon, info: InfoCircleIcon }[kind];
-  return (
-    <span className={`status status-${kind}`}>
-      <Icon size={15} /> {children}
-    </span>
-  );
-}
-
 /* ------------------------------------------------------------------ forms */
 
-export function Field({ label, info, optional, description, hint, error, htmlFor, children, className = "" }: { label: ReactNode; info?: string; optional?: boolean; description?: ReactNode; hint?: ReactNode; error?: ReactNode; htmlFor?: string; children: ReactNode; className?: string }) {
+export function Field({ label, info, optional, description, hint, error, htmlFor, children }: { label: ReactNode; info?: string; optional?: boolean; description?: ReactNode; hint?: ReactNode; error?: ReactNode; htmlFor?: string; children: ReactNode }) {
   return (
-    <div className={`field ${className}`}>
+    <div className="field">
       <div className="field-label">
         <label htmlFor={htmlFor}>
           {label}
@@ -184,10 +156,10 @@ export function Field({ label, info, optional, description, hint, error, htmlFor
   );
 }
 
-export function Toggle({ checked, onChange, children, disabled, id, ariaLabel }: { checked: boolean; onChange: (value: boolean) => void; children?: ReactNode; disabled?: boolean; id?: string; ariaLabel?: string }) {
+export function Toggle({ checked, onChange, children, disabled, ariaLabel }: { checked: boolean; onChange: (value: boolean) => void; children?: ReactNode; disabled?: boolean; ariaLabel?: string }) {
   return (
     <label className={`toggle ${disabled ? "disabled" : ""}`}>
-      <input id={id} type="checkbox" role="switch" aria-label={ariaLabel} checked={checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} />
+      <input type="checkbox" role="switch" aria-label={ariaLabel} checked={checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} />
       <span className="toggle-track" aria-hidden="true">
         <span className="toggle-knob" />
       </span>
@@ -202,18 +174,6 @@ export function SearchInput({ value, onChange, placeholder = "Filter records by 
       <SearchIcon size={16} />
       <input ref={inputRef} type="search" value={value} placeholder={placeholder} aria-label={label ?? placeholder} onChange={(event) => onChange(event.target.value)} />
     </div>
-  );
-}
-
-export function SelectBox({ value, onChange, options, label, className = "" }: { value: string; onChange: (value: string) => void; options: { value: string; label: string }[]; label: string; className?: string }) {
-  return (
-    <select className={`select-box ${className}`} aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
   );
 }
 
@@ -285,7 +245,7 @@ export function Container({ title, info, description, actions, children, classNa
   );
 }
 
-export function PageHeader({ title, info, description, actions }: { title: ReactNode; info?: string; description?: ReactNode; actions?: ReactNode }) {
+export function PageHeader({ title, info, description }: { title: ReactNode; info?: string; description?: ReactNode }) {
   return (
     <header className="page-header">
       <div>
@@ -295,7 +255,6 @@ export function PageHeader({ title, info, description, actions }: { title: React
         </h1>
         {description && <p className="page-description">{description}</p>}
       </div>
-      {actions && <div className="page-actions">{actions}</div>}
     </header>
   );
 }
@@ -311,5 +270,5 @@ export function Loading({ children = "Loading" }: { children?: ReactNode }) {
 /** Small hook for disclosure sections ("Hosted zone details", "Additional configuration"...). */
 export function useDisclosure(initial = false) {
   const [open, setOpen] = useState(initial);
-  return { open, toggle: () => setOpen((value) => !value), setOpen };
+  return { open, toggle: () => setOpen((value) => !value) };
 }

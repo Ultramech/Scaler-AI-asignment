@@ -1,10 +1,10 @@
 "use client";
 
 import { FormEvent, ReactNode, useRef, useState } from "react";
-import { API_URL } from "../lib/api";
-import { useDismiss } from "../lib/hooks";
-import { AwsLogo, ChevronLeftIcon, TriangleDownIcon } from "./icons";
-import { Alert } from "./ui";
+import { API_URL } from "../../lib/api";
+import { useDismiss } from "../../lib/hooks";
+import { AwsLogo, ChevronLeftIcon, TriangleDownIcon } from "../common/icons";
+import { Alert } from "../common/ui";
 
 export type Session = { token: string; user: { email: string; name: string } };
 

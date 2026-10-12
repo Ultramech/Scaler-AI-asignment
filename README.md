@@ -149,7 +149,8 @@ backend/tests  smoke.py: end-to-end API test on a temporary database
 frontend/app
   page.tsx     session handling and route switch
   lib/         API client, hash router, console context (theme, notifications, help), hooks
-  components/  Frame (top bar, navigation, tools panel), DataTable, forms, modals, tabs
+  components/  common/ (ui, icons, DataTable, modals), layout/ (Frame, preferences),
+               auth/ (Login), zones/ (zone boundary, tags), records/ (records tab, form, details panel)
   views/       one file per page (zones, zone detail, create/edit zone, record forms, import, ...)
   styles/      design tokens plus frame, component and page CSS
 frontend/e2e   console.e2e.mjs: browser test of the whole UI

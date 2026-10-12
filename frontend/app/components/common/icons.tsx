@@ -143,12 +143,6 @@ export const ErrorCircleIcon = (props: IconProps) => (
     <line x1="15.5" y1="8.5" x2="8.5" y2="15.5" />
   </Svg>
 );
-export const MinusCircleIcon = (props: IconProps) => (
-  <Svg {...props}>
-    <circle cx="12" cy="12" r="9.5" />
-    <line x1="7.5" y1="12" x2="16.5" y2="12" />
-  </Svg>
-);
 export const ExternalIcon = (props: IconProps) => (
   <Svg {...props}>
     <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />

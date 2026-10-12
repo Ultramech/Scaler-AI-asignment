@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Frame } from "../components/Frame";
-import { TriangleDownIcon, TriangleRightIcon } from "../components/icons";
-import { DeleteZoneModal } from "../components/modals";
-import { BulkAction, recordPanel } from "../components/RecordDetailsPanel";
-import { RecordsTab } from "../components/RecordsTab";
-import { TagsTab } from "../components/TagsTab";
-import { Button, Container, InfoLink, useDisclosure } from "../components/ui";
-import { useZone, ZoneBoundary } from "../components/ZoneBoundary";
+import { Frame } from "../components/layout/Frame";
+import { TriangleDownIcon, TriangleRightIcon } from "../components/common/icons";
+import { DeleteZoneModal } from "../components/common/modals";
+import { BulkAction, recordPanel } from "../components/records/RecordDetailsPanel";
+import { RecordsTab } from "../components/records/RecordsTab";
+import { TagsTab } from "../components/zones/TagsTab";
+import { Button, Container, InfoLink, useDisclosure } from "../components/common/ui";
+import { useZone, ZoneBoundary } from "../components/zones/ZoneBoundary";
 import { useConsole } from "../lib/console";
 import { displayName } from "../lib/dns";
 import { useDebounced, useResource } from "../lib/hooks";

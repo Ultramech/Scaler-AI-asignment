@@ -1,10 +1,10 @@
 "use client";
 
 import { ReactNode } from "react";
-import { ALIAS_ENDPOINTS, ALIAS_TYPES, displayName, RECORD_TYPES, relativeName, ROUTING_POLICIES, TTL_PRESETS } from "../lib/dns";
-import type { DnsRecord, RecordInput, Zone } from "../lib/types";
-import { TriangleDownIcon, TriangleRightIcon } from "./icons";
-import { Button, Field, Toggle, useDisclosure } from "./ui";
+import { ALIAS_ENDPOINTS, ALIAS_TYPES, displayName, RECORD_TYPES, relativeName, ROUTING_POLICIES, TTL_PRESETS } from "../../lib/dns";
+import type { DnsRecord, RecordInput, Zone } from "../../lib/types";
+import { TriangleDownIcon, TriangleRightIcon } from "../common/icons";
+import { Button, Field, Toggle, useDisclosure } from "../common/ui";
 
 export type RecordDraft = {
   key: number;

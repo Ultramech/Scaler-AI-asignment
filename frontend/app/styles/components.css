@@ -39,8 +39,7 @@
   color: #0f141a;
 }
 
-.btn-link,
-.btn-inline-link {
+.btn-link {
   border-color: transparent;
   padding-left: 12px;
   padding-right: 12px;
@@ -934,28 +933,6 @@ fieldset legend {
 
 .flashbar .alert {
   margin: 0 0 8px;
-}
-
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.status-success {
-  color: var(--success);
-}
-
-.status-error {
-  color: var(--error);
-}
-
-.status-stopped {
-  color: var(--text-faint);
-}
-
-.status-info {
-  color: var(--blue);
 }
 
 /* ------------------------------------------------------------------- modal */

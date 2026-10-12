@@ -1,7 +1,7 @@
 "use client";
 
-import type { Tag } from "../lib/types";
-import { Button } from "./ui";
+import type { Tag } from "../../lib/types";
+import { Button } from "../common/ui";
 
 export const MAX_TAGS = 50;
 

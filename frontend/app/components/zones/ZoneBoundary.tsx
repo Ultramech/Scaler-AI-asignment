@@ -1,11 +1,11 @@
 "use client";
 
 import { ReactNode } from "react";
-import { useConsole } from "../lib/console";
-import { Resource, useResource } from "../lib/hooks";
-import { paths } from "../lib/router";
-import type { Zone } from "../lib/types";
-import { Alert, Button, Loading } from "./ui";
+import { useConsole } from "../../lib/console";
+import { Resource, useResource } from "../../lib/hooks";
+import { paths } from "../../lib/router";
+import type { Zone } from "../../lib/types";
+import { Alert, Button, Loading } from "../common/ui";
 
 export function useZone(id: string): Resource<Zone> {
   const { api } = useConsole();

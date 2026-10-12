@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Column, DataTable, useSort } from "../components/DataTable";
-import { Frame } from "../components/Frame";
-import { RefreshIcon } from "../components/icons";
-import { DeleteZoneModal } from "../components/modals";
-import { PreferencesModal, searchModeSentence } from "../components/PreferencesModal";
-import { Alert, Button, InfoLink, Pagination, RoundIconButton, SearchInput } from "../components/ui";
+import { Column, DataTable, useSort } from "../components/common/DataTable";
+import { Frame } from "../components/layout/Frame";
+import { RefreshIcon } from "../components/common/icons";
+import { DeleteZoneModal } from "../components/common/modals";
+import { PreferencesModal, searchModeSentence } from "../components/layout/PreferencesModal";
+import { Alert, Button, InfoLink, Pagination, RoundIconButton, SearchInput } from "../components/common/ui";
 import { useConsole } from "../lib/console";
 import { displayName } from "../lib/dns";
 import { useDebounced, usePreferences, useResource } from "../lib/hooks";

@@ -1,11 +1,11 @@
 "use client";
 
 import { FormEvent, useRef, useState } from "react";
-import { Frame } from "../components/Frame";
-import { TriangleDownIcon, TriangleRightIcon } from "../components/icons";
-import { draftToInput, newDraft, RecordBlock, RecordDraft, RecordFields, validateDraft } from "../components/RecordForm";
-import { Button, Container, PageHeader, useDisclosure } from "../components/ui";
-import { useZone, ZoneBoundary } from "../components/ZoneBoundary";
+import { Frame } from "../components/layout/Frame";
+import { TriangleDownIcon, TriangleRightIcon } from "../components/common/icons";
+import { draftToInput, newDraft, RecordBlock, RecordDraft, RecordFields, validateDraft } from "../components/records/RecordForm";
+import { Button, Container, PageHeader, useDisclosure } from "../components/common/ui";
+import { useZone, ZoneBoundary } from "../components/zones/ZoneBoundary";
 import { ApiError } from "../lib/api";
 import { useConsole } from "../lib/console";
 import { displayName, ROUTING_POLICIES } from "../lib/dns";

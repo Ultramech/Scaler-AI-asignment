@@ -1,11 +1,11 @@
 "use client";
 
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { useConsole } from "../lib/console";
-import { useDebounced, useDismiss } from "../lib/hooks";
-import { FALLBACK_HELP, HELP } from "../lib/help";
-import { paths, slugify } from "../lib/router";
-import type { SearchResult } from "../lib/types";
+import { useConsole } from "../../lib/console";
+import { useDebounced, useDismiss } from "../../lib/hooks";
+import { FALLBACK_HELP, HELP } from "../../lib/help";
+import { paths, slugify } from "../../lib/router";
+import type { SearchResult } from "../../lib/types";
 import {
   AwsLogo,
   BellIcon,
@@ -24,8 +24,8 @@ import {
   ThumbsUpIcon,
   TriangleDownIcon,
   TriangleRightIcon,
-} from "./icons";
-import { Button, Flashbar, IconButton, Modal } from "./ui";
+} from "../common/icons";
+import { Button, Flashbar, IconButton, Modal } from "../common/ui";
 
 /* -------------------------------------------------------------------- top bar */
 

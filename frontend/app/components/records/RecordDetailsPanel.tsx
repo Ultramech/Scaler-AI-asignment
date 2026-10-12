@@ -1,10 +1,10 @@
 "use client";
 
-import { displayName, recordTtl } from "../lib/dns";
-import type { DnsRecord, Zone } from "../lib/types";
-import { useConsole } from "../lib/console";
-import { paths } from "../lib/router";
-import { Button, CopyButton } from "./ui";
+import { displayName, recordTtl } from "../../lib/dns";
+import type { DnsRecord, Zone } from "../../lib/types";
+import { useConsole } from "../../lib/console";
+import { paths } from "../../lib/router";
+import { Button, CopyButton } from "../common/ui";
 
 export type BulkAction = "ttl" | "delete";
 

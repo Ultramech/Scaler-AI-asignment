@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Login, Session } from "./components/Login";
+import { Login, Session } from "./components/auth/Login";
 import { ConsoleProvider } from "./lib/console";
 import { readStorage, writeStorage } from "./lib/storage";
 import { Route, useRoute } from "./lib/router";

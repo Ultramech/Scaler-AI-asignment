@@ -1,9 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Frame } from "../components/Frame";
-import { hasDuplicateTags, TagEditor } from "../components/TagEditor";
-import { Button, Container, Field, InfoLink, PageHeader } from "../components/ui";
+import { Frame } from "../components/layout/Frame";
+import { hasDuplicateTags, TagEditor } from "../components/zones/TagEditor";
+import { Button, Container, Field, InfoLink, PageHeader } from "../components/common/ui";
 import { useConsole } from "../lib/console";
 import { displayName } from "../lib/dns";
 import { paths } from "../lib/router";

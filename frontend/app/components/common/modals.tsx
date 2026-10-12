@@ -1,26 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { displayName } from "../lib/dns";
-import type { DnsRecord, Zone } from "../lib/types";
+import { displayName } from "../../lib/dns";
+import type { DnsRecord, Zone } from "../../lib/types";
 import { Button, Field, Modal } from "./ui";
 
-/** Deleting a hosted zone requires typing "delete", like the real console. */
-export function DeleteZoneModal({ zone, onCancel, onConfirm }: { zone: Zone; onCancel: () => void; onConfirm: () => Promise<void> }) {
-  const [text, setText] = useState("");
+/** Runs an async confirm action and reports `busy` while it is running, so the confirm button can be disabled. */
+function useBusy<A extends unknown[]>(action: (...args: A) => Promise<void>) {
   const [busy, setBusy] = useState(false);
-  const confirm = async () => {
+  const run = async (...args: A) => {
     setBusy(true);
     try {
-      await onConfirm();
+      await action(...args);
     } finally {
       setBusy(false);
     }
   };
+  return [busy, run] as const;
+}
+
+/** Deleting a hosted zone requires typing "delete", like the real console. */
+export function DeleteZoneModal({ zone, onCancel, onConfirm }: { zone: Zone; onCancel: () => void; onConfirm: () => Promise<void> }) {
+  const [text, setText] = useState("");
+  const [busy, confirm] = useBusy(onConfirm);
   return (
     <Modal
       title={`Delete hosted zone ${displayName(zone.name)}?`}
-      size="medium"
       onClose={onCancel}
       footer={
         <>
@@ -56,19 +61,10 @@ export function DeleteZoneModal({ zone, onCancel, onConfirm }: { zone: Zone; onC
 }
 
 export function DeleteRecordsModal({ records, onCancel, onConfirm }: { records: DnsRecord[]; onCancel: () => void; onConfirm: () => Promise<void> }) {
-  const [busy, setBusy] = useState(false);
-  const confirm = async () => {
-    setBusy(true);
-    try {
-      await onConfirm();
-    } finally {
-      setBusy(false);
-    }
-  };
+  const [busy, confirm] = useBusy(onConfirm);
   return (
     <Modal
       title={records.length === 1 ? "Delete record?" : `Delete ${records.length} records?`}
-      size="medium"
       onClose={onCancel}
       footer={
         <>
@@ -98,16 +94,8 @@ export function DeleteRecordsModal({ records, onCancel, onConfirm }: { records: 
 /** Bonus bulk operation: set one TTL on every selected record. */
 export function BulkTtlModal({ count, onCancel, onConfirm }: { count: number; onCancel: () => void; onConfirm: (ttl: number) => Promise<void> }) {
   const [ttl, setTtl] = useState("300");
-  const [busy, setBusy] = useState(false);
   const valid = /^\d+$/.test(ttl) && Number(ttl) <= 2147483647;
-  const submit = async () => {
-    setBusy(true);
-    try {
-      await onConfirm(Number(ttl));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const [busy, submit] = useBusy(() => onConfirm(Number(ttl)));
   return (
     <Modal
       title={`Change TTL for ${count} records`}

@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useConsole } from "../lib/console";
-import { displayName, FILTER_TYPES, recordTtl, ROUTING_POLICIES } from "../lib/dns";
-import { Resource, usePreferences } from "../lib/hooks";
-import { paths } from "../lib/router";
-import type { DnsRecord, Zone } from "../lib/types";
-import { Column, DataTable, useSort } from "./DataTable";
-import { RefreshIcon, TriangleDownIcon } from "./icons";
-import { BulkTtlModal, DeleteRecordsModal } from "./modals";
+import { useConsole } from "../../lib/console";
+import { displayName, FILTER_TYPES, recordTtl, ROUTING_POLICIES } from "../../lib/dns";
+import { Resource, usePreferences } from "../../lib/hooks";
+import { paths } from "../../lib/router";
+import type { DnsRecord, Zone } from "../../lib/types";
+import { Column, DataTable, useSort } from "../common/DataTable";
+import { RefreshIcon, TriangleDownIcon } from "../common/icons";
+import { BulkTtlModal, DeleteRecordsModal } from "../common/modals";
 import type { BulkAction } from "./RecordDetailsPanel";
-import { PreferencesModal, searchModeSentence } from "./PreferencesModal";
-import { Alert, Button, Container, InfoLink, Pagination, RoundIconButton, SearchInput } from "./ui";
+import { PreferencesModal, searchModeSentence } from "../layout/PreferencesModal";
+import { Alert, Button, Container, InfoLink, Pagination, RoundIconButton, SearchInput } from "../common/ui";
 
 const multiline = (value: string) => value.split("\n").map((line, index) => <div key={index}>{line}</div>);
 

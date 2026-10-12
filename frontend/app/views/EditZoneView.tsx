@@ -1,10 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Frame } from "../components/Frame";
-import { hasDuplicateTags, TagEditor } from "../components/TagEditor";
-import { Button, Container, Field, PageHeader } from "../components/ui";
-import { useZone, ZoneBoundary } from "../components/ZoneBoundary";
+import { Frame } from "../components/layout/Frame";
+import { hasDuplicateTags, TagEditor } from "../components/zones/TagEditor";
+import { Button, Container, Field, PageHeader } from "../components/common/ui";
+import { useZone, ZoneBoundary } from "../components/zones/ZoneBoundary";
 import { useConsole } from "../lib/console";
 import { displayName } from "../lib/dns";
 import { paths } from "../lib/router";

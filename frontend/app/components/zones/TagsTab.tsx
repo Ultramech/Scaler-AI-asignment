@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useConsole } from "../lib/console";
-import type { Tag, Zone } from "../lib/types";
-import { Column, DataTable, useSort } from "./DataTable";
-import { Button, Container, Modal, Pagination, SearchInput } from "./ui";
+import { useConsole } from "../../lib/console";
+import type { Tag, Zone } from "../../lib/types";
+import { Column, DataTable, useSort } from "../common/DataTable";
+import { Button, Container, Modal, Pagination, SearchInput } from "../common/ui";
 import { hasDuplicateTags, TagEditor } from "./TagEditor";
 
 export function TagsTab({ zone, onChanged }: { zone: Zone; onChanged: () => void }) {

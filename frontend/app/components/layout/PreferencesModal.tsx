@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { TablePreferences } from "../lib/hooks";
-import { Button, Modal, Toggle } from "./ui";
+import type { TablePreferences } from "../../lib/hooks";
+import { Button, Modal, Toggle } from "../common/ui";
 
 const PAGE_SIZES = [10, 30, 50, 100] as const;
 const SEARCH_MODES: { value: TablePreferences["searchMode"]; description: string }[] = [

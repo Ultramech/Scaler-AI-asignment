@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Column, DataTable, useSort } from "../components/DataTable";
-import { Frame } from "../components/Frame";
-import { PreferencesModal, searchModeSentence } from "../components/PreferencesModal";
-import { Alert, Button, Container, PageHeader, Pagination, SearchInput } from "../components/ui";
-import { useZone, ZoneBoundary } from "../components/ZoneBoundary";
+import { Column, DataTable, useSort } from "../components/common/DataTable";
+import { Frame } from "../components/layout/Frame";
+import { PreferencesModal, searchModeSentence } from "../components/layout/PreferencesModal";
+import { Alert, Button, Container, PageHeader, Pagination, SearchInput } from "../components/common/ui";
+import { useZone, ZoneBoundary } from "../components/zones/ZoneBoundary";
 import { useConsole } from "../lib/console";
 import { displayName } from "../lib/dns";
 import { useDebounced, usePreferences } from "../lib/hooks";

@@ -1,10 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Frame } from "../components/Frame";
-import { draftFromRecord, draftToInput, RecordDraft, RecordFields, validateDraft } from "../components/RecordForm";
-import { Alert, Button, Container, Loading, PageHeader } from "../components/ui";
-import { useZone, ZoneBoundary } from "../components/ZoneBoundary";
+import { Frame } from "../components/layout/Frame";
+import { draftFromRecord, draftToInput, RecordDraft, RecordFields, validateDraft } from "../components/records/RecordForm";
+import { Alert, Button, Container, Loading, PageHeader } from "../components/common/ui";
+import { useZone, ZoneBoundary } from "../components/zones/ZoneBoundary";
 import { useConsole } from "../lib/console";
 import { displayName } from "../lib/dns";
 import { useResource } from "../lib/hooks";
