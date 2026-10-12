@@ -1,10 +1,10 @@
 "use client";
 
-import { FormEvent, ReactNode, useRef, useState } from "react";
+import { FormEvent, useState } from "react";
 import { API_URL } from "../../lib/api";
-import { useDismiss } from "../../lib/hooks";
-import { AwsLogo, ChevronLeftIcon, TriangleDownIcon } from "../common/icons";
+import { AwsLogo, ChevronLeftIcon } from "../common/icons";
 import { Alert } from "../common/ui";
+import { TopMenu } from "./TopMenu";
 
 export type Session = { token: string; user: { email: string; name: string } };
 
@@ -18,25 +18,6 @@ const USER_TYPES: { type: UserType; title: string; description: string }[] = [
 
 /** Set on the hosted demo (free hosting that sleeps) so the sign-in page can link to it. Not set locally, so the note is hidden there. */
 const HEALTH_URL = process.env.NEXT_PUBLIC_API_HEALTH_URL;
-
-/** A blue "label ▾" link in the top-right corner that opens a small menu. */
-function TopMenu({ label, children }: { label: string; children: (close: () => void) => ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useDismiss(ref, open, setOpen);
-  return (
-    <div className="signin-topmenu" ref={ref}>
-      <button type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
-        {label} <TriangleDownIcon size={11} />
-      </button>
-      {open && (
-        <div className="signin-menu" role="menu">
-          {children(() => setOpen(false))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 /**
  * Mocked AWS sign-in modelled on the console's sign-in page. Root users give an email address and then a

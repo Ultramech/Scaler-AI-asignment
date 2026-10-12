@@ -1,0 +1,281 @@
+/* Alerts, modals, preferences and small UI pieces. */
+
+/* ------------------------------------------------------------------ alerts */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 16px;
+  margin: 12px 0;
+  border: 2px solid;
+  border-radius: var(--radius-small);
+}
+
+.alert-icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.alert-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-text strong {
+  display: block;
+}
+
+.alert-action {
+  flex: none;
+}
+
+.alert-success {
+  border-color: var(--success);
+  background: var(--success-bg);
+}
+
+.alert-success .alert-icon {
+  color: var(--success);
+}
+
+.alert-error {
+  border-color: var(--error);
+  background: var(--error-bg);
+}
+
+.alert-error .alert-icon {
+  color: var(--error);
+}
+
+.alert-warning {
+  border-color: var(--warning);
+  background: var(--warning-bg);
+}
+
+.alert-warning .alert-icon {
+  color: var(--warning);
+}
+
+.alert-info {
+  border-color: var(--blue);
+  background: var(--info-bg);
+}
+
+.alert-info .alert-icon {
+  color: var(--blue);
+}
+
+.flashbar {
+  margin-bottom: 16px;
+}
+
+.flashbar .alert {
+  margin: 0 0 8px;
+}
+
+/* ------------------------------------------------------------------- modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 20, 26, 0.55);
+}
+
+.modal {
+  color: var(--text);
+  width: 100%;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.modal-small {
+  max-width: 480px;
+}
+
+.modal-medium {
+  max-width: 580px;
+}
+
+.modal-large {
+  max-width: 860px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 12px;
+}
+
+.modal-header h2 {
+  font-size: 22px;
+  line-height: 28px;
+  overflow-wrap: anywhere;
+}
+
+.modal-body {
+  padding: 8px 24px 20px;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.confirm-label {
+  margin-bottom: 8px;
+}
+
+.delete-list {
+  margin: 12px 0 0;
+  padding: 0 0 0 20px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.delete-list span {
+  color: var(--text-faint);
+  margin-left: 6px;
+}
+
+/* ------------------------------------------------------------- preferences */
+.prefs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.prefs-left {
+  padding-right: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.prefs-right {
+  padding-left: 32px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.prefs h3 {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.prefs h4 {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+
+.prefs ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.prefs li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 4px 7px 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 700px) {
+  .prefs {
+    grid-template-columns: 1fr;
+  }
+
+  .prefs-right {
+    border-left: 0;
+    padding-left: 0;
+    margin-top: 20px;
+  }
+}
+
+/* ----------------------------------------------------------------- misc UI */
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 0;
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.disclosure-heading {
+  font-size: 18px;
+  line-height: 22px;
+}
+
+@media (max-width: 700px) {
+  .filter-group {
+    flex-wrap: wrap;
+  }
+
+  .filter-search {
+    flex-basis: 100%;
+  }
+}
+
+.shortcuts {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shortcuts td {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.shortcuts td:first-child {
+  white-space: nowrap;
+  padding-right: 20px;
+}
+
+.bulk-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}

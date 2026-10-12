@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import "./styles/base.css";
 import "./styles/frame.css";
-import "./styles/components.css";
+import "./styles/forms.css";
+import "./styles/tables.css";
+import "./styles/feedback.css";
+import "./styles/signin.css";
 import "./styles/pages.css";
 
 export const metadata: Metadata = {

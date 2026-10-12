@@ -1,0 +1,396 @@
+/* Containers, pagination, tables and tabs. */
+
+/* ------------------------------------------------------------- containers */
+.container {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 16px 20px 20px;
+  margin-bottom: 20px;
+}
+
+.container-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 34px;
+}
+
+.container-header h2 {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  line-height: 22px;
+}
+
+.container-description {
+  margin: 2px 0 12px;
+  color: var(--text-muted);
+}
+
+.container-header + * {
+  margin-top: 8px;
+}
+
+.container-header + .container-description {
+  margin-top: 2px;
+}
+
+.container-actions,
+.table-actions,
+.page-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.container-footer {
+  margin: 20px -20px -20px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.container-footer.left {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.count {
+  font-weight: 400;
+  color: var(--text-faint);
+  margin: 0 4px;
+}
+
+.page-header,
+.table-header,
+.zone-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-header h1,
+.table-header h1,
+.zone-header h1,
+.coming-soon h1 {
+  display: flex;
+  align-items: center;
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 700;
+}
+
+.page-description {
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+
+.mode-note {
+  margin: 0 0 14px;
+  color: var(--text-muted);
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 12px 0 16px;
+  flex-wrap: wrap;
+}
+
+.filter-row.right {
+  justify-content: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-wide {
+  width: 100%;
+  max-width: 540px;
+  flex: 1 1 320px;
+}
+
+/* ------------------------------------------------------------- pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.page-arrow,
+.page-number {
+  min-width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 0 6px;
+}
+
+.page-arrow:disabled {
+  color: var(--disabled-text);
+}
+
+.page-number:hover:not(.current) {
+  background: var(--surface-subtle);
+}
+
+.page-number.current {
+  background: var(--blue-tint);
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.page-gap {
+  padding: 0 4px;
+  color: var(--text-faint);
+}
+
+.page-settings {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 28px;
+  border: 0;
+  border-left: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  margin-left: 6px;
+  padding: 0 0 0 10px;
+}
+
+.page-settings:hover {
+  color: var(--blue);
+}
+
+/* ------------------------------------------------------------------ tables */
+.table-scroll {
+  overflow-x: auto;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.data-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.data-table th {
+  position: relative;
+  padding: 0;
+  text-align: left;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.th-inner {
+  display: flex;
+  min-width: 0;
+}
+
+.th-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  text-align: left;
+  font-weight: 700;
+  color: inherit;
+}
+
+.th-label:disabled {
+  cursor: default;
+}
+
+.th-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sort-caret {
+  display: inline-flex;
+  color: var(--text-faint);
+}
+
+.sort-caret.active {
+  color: var(--text);
+}
+
+.data-table th:not(.select-cell)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--border);
+}
+
+.data-table td {
+  padding: 10px 16px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.data-table td > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wrap-lines .data-table td {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.data-table .select-cell {
+  padding-left: 16px;
+  padding-right: 0;
+  width: 44px;
+}
+
+.data-table td.select-cell {
+  padding-top: 12px;
+}
+
+.data-table tbody tr {
+  cursor: default;
+}
+
+.data-table tbody tr:hover td {
+  background: var(--surface-subtle);
+}
+
+.data-table tbody tr.selected td {
+  background: var(--blue-tint);
+  border-bottom-color: var(--blue);
+  border-top: 1px solid var(--blue);
+}
+
+.data-table tbody tr.selected td:first-child {
+  border-left: 2px solid var(--blue);
+}
+
+.data-table tbody tr.selected td:last-child {
+  border-right: 2px solid var(--blue);
+}
+
+.table-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.empty-state strong {
+  font-size: 14px;
+}
+
+.empty-state p {
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+
+.export-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 -20px -20px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.export-bar span {
+  margin-left: auto;
+}
+
+/* -------------------------------------------------------------------- tabs */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin: 0 0 16px;
+  overflow-x: auto;
+}
+
+.tab {
+  position: relative;
+  border: 0;
+  background: transparent;
+  padding: 12px 20px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tab + .tab::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 1px;
+  background: var(--border);
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.active {
+  color: var(--blue);
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 3px;
+  background: var(--blue);
+}

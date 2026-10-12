@@ -7,8 +7,10 @@ import { Resource, usePreferences } from "../../lib/hooks";
 import { paths } from "../../lib/router";
 import type { DnsRecord, Zone } from "../../lib/types";
 import { Column, DataTable, useSort } from "../common/DataTable";
-import { RefreshIcon, TriangleDownIcon } from "../common/icons";
+import { RefreshIcon } from "../common/icons";
 import { BulkTtlModal, DeleteRecordsModal } from "../common/modals";
+import { ExportBar } from "./ExportBar";
+import { FilterSelect } from "./FilterSelect";
 import type { BulkAction } from "./RecordDetailsPanel";
 import { PreferencesModal, searchModeSentence } from "../layout/PreferencesModal";
 import { Alert, Button, Container, InfoLink, Pagination, RoundIconButton, SearchInput } from "../common/ui";
@@ -235,52 +237,5 @@ export function RecordsTab({ zone, records, filter, onFilter, selected, onSelect
       {changingTtl && <BulkTtlModal count={selectedRecords.length} onCancel={() => setChangingTtl(false)} onConfirm={changeTtl} />}
       {deleting && <DeleteRecordsModal records={deleting} onCancel={() => setDeleting(null)} onConfirm={remove} />}
     </Container>
-  );
-}
-
-function FilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) {
-  return (
-    <div className="filter-select">
-      <select aria-label={label} value={value} className={value ? "has-value" : ""} onChange={(event) => onChange(event.target.value)}>
-        <option value="">{label}</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <TriangleDownIcon size={10} className="select-caret" />
-    </div>
-  );
-}
-
-/** Bonus feature: download the zone as JSON or a BIND zone file. */
-function ExportBar({ zone }: { zone: Zone }) {
-  const { api, notify, notifyError } = useConsole();
-  const download = async (format: "json" | "bind") => {
-    try {
-      const content = format === "json" ? JSON.stringify(await api.get(`/zones/${zone.id}/export?format=json`), null, 2) : await api.text(`/zones/${zone.id}/export?format=bind`);
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(new Blob([content], { type: "text/plain" }));
-      link.download = `${displayName(zone.name)}.${format === "json" ? "json" : "zone"}`;
-      link.click();
-      URL.revokeObjectURL(link.href);
-      notify({ type: "success", header: `Exported ${displayName(zone.name)} as ${format === "json" ? "JSON" : "a BIND zone file"}.` });
-    } catch (error) {
-      notifyError("Export failed", error);
-    }
-  };
-  return (
-    <div className="export-bar">
-      <button type="button" className="inline-link" onClick={() => download("json")}>
-        Export JSON
-      </button>
-      <button type="button" className="inline-link" onClick={() => download("bind")}>
-        Export BIND
-      </button>
-      <span>
-        Press <kbd>?</kbd> for keyboard shortcuts.
-      </span>
-    </div>
   );
 }

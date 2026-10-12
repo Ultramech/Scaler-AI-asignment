@@ -150,9 +150,9 @@ frontend/app
   page.tsx     session handling and route switch
   lib/         API client, hash router, console context (theme, notifications, help), hooks
   components/  common/ (ui, icons, DataTable, modals), layout/ (Frame, Topbar, Sidebar, help panel, preferences),
-               auth/ (Login), zones/ (zone boundary, tags), records/ (records tab, form, details panel)
+               auth/ (Login, TopMenu), zones/ (zone boundary, tags), records/ (records tab, filters, export, form, details panel)
   views/       one file per page (zones, zone detail, create/edit zone, record forms, import, ...)
-  styles/      design tokens plus frame, component and page CSS
+  styles/      design tokens plus frame, form, table, feedback, sign-in and page CSS
 frontend/e2e   console.e2e.mjs: browser test of the whole UI
 ```
 
