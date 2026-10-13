@@ -1,26 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useConsole } from "../../lib/console";
 import type { Tag, Zone } from "../../lib/types";
 import { Column, DataTable, useSort } from "../common/DataTable";
 import { Button, Container, Modal, Pagination, SearchInput } from "../common/ui";
 import { hasDuplicateTags, TagEditor } from "./TagEditor";
 
+const COLUMNS: Column<Tag>[] = [
+  { id: "key", header: "Key", width: 400, sortValue: (tag) => tag.key, cell: (tag) => tag.key },
+  { id: "value", header: "Value", width: 500, sortValue: (tag) => tag.value, cell: (tag) => tag.value || "-" },
+];
+
 export function TagsTab({ zone, onChanged }: { zone: Zone; onChanged: () => void }) {
   const { api, notify, notifyError } = useConsole();
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(1);
   const [managing, setManaging] = useState(false);
-  const rows = useMemo(() => zone.tags.filter((tag) => `${tag.key} ${tag.value}`.toLowerCase().includes(filter.trim().toLowerCase())), [zone.tags, filter]);
-  const columns = useMemo<Column<Tag>[]>(
-    () => [
-      { id: "key", header: "Key", width: 400, sortValue: (tag) => tag.key, cell: (tag) => tag.key },
-      { id: "value", header: "Value", width: 500, sortValue: (tag) => tag.value, cell: (tag) => tag.value || "-" },
-    ],
-    [],
-  );
-  const { sorted, sort, toggle } = useSort(rows, columns, { id: "key", desc: false });
+  const rows = zone.tags.filter((tag) => `${tag.key} ${tag.value}`.toLowerCase().includes(filter.trim().toLowerCase()));
+  const { sorted, sort, toggle } = useSort(rows, COLUMNS, { id: "key", desc: false });
 
   const save = async (tags: Tag[]) => {
     try {
@@ -43,7 +41,7 @@ export function TagsTab({ zone, onChanged }: { zone: Zone; onChanged: () => void
         <SearchInput value={filter} onChange={(value) => { setFilter(value); setPage(1); }} placeholder="Search" className="filter-wide" />
         <Pagination page={page} pages={1} onChange={setPage} />
       </div>
-      <DataTable label="Tags" columns={columns} rows={sorted} rowKey={(tag) => tag.key} sort={sort} onSort={toggle} empty={filter ? "No tags match your search." : "No tags associated with the resource."} />
+      <DataTable label="Tags" columns={COLUMNS} rows={sorted} rowKey={(tag) => tag.key} sort={sort} onSort={toggle} empty={filter ? "No tags match your search." : "No tags associated with the resource."} />
       {managing && <ManageTagsModal tags={zone.tags} onCancel={() => setManaging(false)} onSave={save} />}
     </Container>
   );

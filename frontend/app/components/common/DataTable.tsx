@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useState } from "react";
 import { TriangleDownIcon, TriangleDownOutlineIcon, TriangleUpIcon } from "./icons";
 
 export type Column<T> = {
@@ -18,18 +18,18 @@ type Key = string | number;
 /** Sorts rows by a column and exposes the click handler headers use to cycle ascending/descending. */
 export function useSort<T>(rows: T[], columns: Column<T>[], initial: SortState = null) {
   const [sort, setSort] = useState<SortState>(initial);
-  const sorted = useMemo(() => {
-    const column = sort && columns.find((candidate) => candidate.id === sort.id);
-    if (!sort || !column?.sortValue) return rows;
+  const column = sort && columns.find((candidate) => candidate.id === sort.id);
+  let sorted = rows;
+  if (sort && column?.sortValue) {
     const value = column.sortValue;
     const direction = sort.desc ? -1 : 1;
-    return [...rows].sort((a, b) => {
+    sorted = [...rows].sort((a, b) => {
       const left = value(a);
       const right = value(b);
       const order = typeof left === "number" && typeof right === "number" ? left - right : String(left).localeCompare(String(right), undefined, { numeric: true });
       return order * direction;
     });
-  }, [rows, columns, sort]);
+  }
   const toggle = (id: string) => setSort((current) => ({ id, desc: current?.id === id && !current.desc }));
   return { sorted, sort, toggle };
 }

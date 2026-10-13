@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 /** Minimal hash router: the console lives at `#/hostedzones/...` so Back/Forward and deep links work. */
 export type Route =
@@ -64,12 +64,13 @@ export function navigate(path: string) {
   else location.hash = path;
 }
 
-function subscribe(callback: () => void) {
-  window.addEventListener("hashchange", callback);
-  return () => window.removeEventListener("hashchange", callback);
-}
-
-/** The raw hash is the snapshot so React compares a stable string, then it is parsed on render. */
+/** The current page, read from the URL hash and kept up to date when the hash changes. */
 export function useRoute(): Route {
-  return parseRoute(useSyncExternalStore(subscribe, () => location.hash, () => ""));
+  const [hash, setHash] = useState(() => location.hash);
+  useEffect(() => {
+    const update = () => setHash(location.hash);
+    window.addEventListener("hashchange", update);
+    return () => window.removeEventListener("hashchange", update);
+  }, []);
+  return parseRoute(hash);
 }

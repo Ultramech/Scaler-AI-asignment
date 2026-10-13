@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Column, DataTable, useSort } from "../components/common/DataTable";
 import { Frame } from "../components/layout/Frame";
 import { PreferencesModal, searchModeSentence } from "../components/layout/PreferencesModal";
@@ -68,11 +68,9 @@ function ImportForm({ zone }: { zone: Zone }) {
     };
   }, [debounced, zone.id, api]);
 
-  const rows = useMemo(() => {
-    const needle = filter.trim().toLowerCase();
-    const all = preview?.records ?? [];
-    return needle ? all.filter((row) => `${row.name} ${row.type} ${row.value} ${row.ttl}`.toLowerCase().includes(needle)) : all;
-  }, [preview, filter]);
+  const needle = filter.trim().toLowerCase();
+  const all = preview?.records ?? [];
+  const rows = needle ? all.filter((row) => `${row.name} ${row.type} ${row.value} ${row.ttl}`.toLowerCase().includes(needle)) : all;
   const { sorted, sort, toggle } = useSort(rows, COLUMNS, { id: "name", desc: false });
   const { page, setPage, pages, pageRows } = usePagination(sorted, preferences.pageSize, [filter, preferences.pageSize, preview]);
 

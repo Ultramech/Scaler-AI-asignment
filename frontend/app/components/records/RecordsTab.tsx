@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useConsole } from "../../lib/console";
 import { displayName, FILTER_TYPES, recordTtl, ROUTING_POLICIES } from "../../lib/dns";
 import { Resource, usePagination, usePreferences, useShortcuts } from "../../lib/hooks";
@@ -56,10 +56,7 @@ export function RecordsTab({ zone, records, filter, onFilter, selected, onSelect
   const search = useRef<HTMLInputElement>(null);
 
   const all = records.data ?? [];
-  const filtered = useMemo(
-    () => all.filter((record) => (!type || record.type === type) && (!policy || record.routing_policy === policy) && (!alias || (alias === "Yes") === record.alias)),
-    [all, type, policy, alias],
-  );
+  const filtered = all.filter((record) => (!type || record.type === type) && (!policy || record.routing_policy === policy) && (!alias || (alias === "Yes") === record.alias));
   const { sorted, sort, toggle } = useSort(filtered, COLUMNS, null);
   const { page, setPage, pages, pageRows } = usePagination(sorted, preferences.pageSize, [filter, type, policy, alias, preferences.pageSize]);
   const selectedRecords = all.filter((record) => selected.has(record.id));

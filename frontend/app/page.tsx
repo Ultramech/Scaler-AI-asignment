@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Login, Session } from "./components/auth/Login";
 import { ConsoleProvider } from "./lib/console";
 import { readStorage, writeStorage } from "./lib/storage";
-import { Route, useRoute } from "./lib/router";
+import { useRoute } from "./lib/router";
 import { CreateRecordView } from "./views/CreateRecordView";
 import { CreateZoneView } from "./views/CreateZoneView";
 import { EditRecordView } from "./views/EditRecordView";
@@ -53,12 +53,9 @@ export default function Page() {
   );
 }
 
+/** Shows the page that matches the URL hash. Only rendered after sign-in, in the browser. */
 function Routes() {
   const route = useRoute();
-  return renderRoute(route);
-}
-
-function renderRoute(route: Route) {
   switch (route.name) {
     case "zones":
       return <ZonesView />;
