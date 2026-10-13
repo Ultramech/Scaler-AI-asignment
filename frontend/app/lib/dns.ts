@@ -52,6 +52,3 @@ export function relativeName(recordName: string, zoneName: string) {
 }
 
 export const recordTtl = (record: DnsRecord) => (record.alias ? "-" : record.ttl.toLocaleString());
-
-export const formatDate = (iso: string | null) =>
-  iso ? new Date(iso.endsWith("Z") ? iso : iso + "Z").toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "-";

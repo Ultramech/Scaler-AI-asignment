@@ -168,11 +168,11 @@ export function Toggle({ checked, onChange, children, disabled, ariaLabel }: { c
   );
 }
 
-export function SearchInput({ value, onChange, placeholder = "Filter records by property or value", inputRef, className = "", label }: { value: string; onChange: (value: string) => void; placeholder?: string; inputRef?: RefObject<HTMLInputElement | null>; className?: string; label?: string }) {
+export function SearchInput({ value, onChange, placeholder = "Filter records by property or value", inputRef, className = "" }: { value: string; onChange: (value: string) => void; placeholder?: string; inputRef?: RefObject<HTMLInputElement | null>; className?: string }) {
   return (
     <div className={`search-input ${className}`}>
       <SearchIcon size={16} />
-      <input ref={inputRef} type="search" value={value} placeholder={placeholder} aria-label={label ?? placeholder} onChange={(event) => onChange(event.target.value)} />
+      <input ref={inputRef} type="search" value={value} placeholder={placeholder} aria-label={placeholder} onChange={(event) => onChange(event.target.value)} />
     </div>
   );
 }

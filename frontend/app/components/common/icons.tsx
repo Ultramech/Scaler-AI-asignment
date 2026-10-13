@@ -58,11 +58,6 @@ export const ChevronRightIcon = (props: IconProps) => (
     <polyline points="9 5 16 12 9 19" />
   </Svg>
 );
-export const ChevronDownIcon = (props: IconProps) => (
-  <Svg {...props} strokeWidth={2.6}>
-    <polyline points="5 9 12 16 19 9" />
-  </Svg>
-);
 /** Solid triangles, used for sort carets, select carets and disclosure toggles. */
 export const TriangleDownIcon = ({ size = 10, ...rest }: IconProps) => (
   <svg width={size} height={size} viewBox="0 0 10 10" fill="currentColor" aria-hidden="true" focusable="false" {...rest}>

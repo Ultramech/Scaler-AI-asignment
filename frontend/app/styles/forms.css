@@ -276,10 +276,6 @@ legend i {
   cursor: pointer;
 }
 
-.search-input.full {
-  width: 100%;
-}
-
 .filter-search {
   flex: 1 1 200px;
   min-width: 180px;
