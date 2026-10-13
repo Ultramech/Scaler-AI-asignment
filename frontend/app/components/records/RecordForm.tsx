@@ -70,14 +70,12 @@ type FieldsProps = {
   onChange: (draft: RecordDraft) => void;
   /** Protected records keep their name and type. */
   lockIdentity?: boolean;
-  /** Wizard mode fixes the routing policy chosen on the first step. */
-  lockPolicy?: boolean;
   error?: string | null;
   autoFocus?: boolean;
   idPrefix: string;
 };
 
-export function RecordFields({ draft, zone, onChange, lockIdentity, lockPolicy, error, autoFocus, idPrefix }: FieldsProps) {
+export function RecordFields({ draft, zone, onChange, lockIdentity, error, autoFocus, idPrefix }: FieldsProps) {
   const patch = (changes: Partial<RecordDraft>) => onChange({ ...draft, ...changes });
   const typeInfo = RECORD_TYPES.find((entry) => entry.type === draft.type);
   const endpoint = ALIAS_ENDPOINTS[draft.endpoint];
@@ -165,7 +163,7 @@ export function RecordFields({ draft, zone, onChange, lockIdentity, lockPolicy, 
         </Field>
         <Field label="Routing policy" info="routing-policy" htmlFor={`${idPrefix}-policy`}>
           <div className="select-wrap">
-            <select id={`${idPrefix}-policy`} className="text-input" value={draft.policy} disabled={lockPolicy} onChange={(event) => patch({ policy: event.target.value })}>
+            <select id={`${idPrefix}-policy`} className="text-input" value={draft.policy} onChange={(event) => patch({ policy: event.target.value })}>
               {ROUTING_POLICIES.map((policy) => (
                 <option key={policy.value} value={policy.value}>
                   {policy.label}

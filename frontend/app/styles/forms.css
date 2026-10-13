@@ -118,11 +118,6 @@
   text-decoration: underline;
 }
 
-.inline-link.strong {
-  font-weight: 700;
-  text-decoration: none;
-}
-
 .inline-link:hover,
 .info-link:hover,
 .table-link:hover {
@@ -404,16 +399,11 @@ fieldset legend {
   margin-bottom: 6px;
 }
 
-.tile-row,
-.policy-grid {
+.tile-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 8px;
-}
-
-.policy-grid {
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
 .tile {

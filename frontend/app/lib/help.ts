@@ -58,7 +58,7 @@ export const HELP: Record<string, HelpTopic> = {
   "create-record": {
     title: "Create record",
     body: [
-      "Use quick create to add one or more records at once. Use the wizard if you need more explanation, starting with the choice of a routing policy.",
+      "Use quick create to add one or more records at once.",
     ],
   },
   "import-zone-file": {

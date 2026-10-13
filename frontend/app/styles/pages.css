@@ -170,22 +170,6 @@
 }
 
 /* ------------------------------------------------------------ record forms */
-.method-card {
-  padding: 14px 20px 18px;
-}
-
-.method-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-top: 16px;
-}
-
-.method-grid p {
-  margin-top: 4px;
-  color: var(--text-muted);
-}
-
 .record-block {
   margin-top: 12px;
 }
@@ -261,7 +245,6 @@
 @media (max-width: 900px) {
 
   .record-grid,
-  .method-grid,
   .tile-row {
     grid-template-columns: 1fr;
   }

@@ -82,7 +82,7 @@
 **DNS records**
 - Types `A`, `AAAA`, `CNAME`, `TXT`, `MX`, `NS`, `PTR`, `SRV`, `CAA` (plus the zone's `SOA`), with per-type value validation (IPv4/IPv6, MX priority, SRV, CAA, quoted TXT, hostnames).
 - Filter by text, type, routing policy and alias; sort; paginate; the right-hand panel shows the selected record with copy buttons.
-- *Quick create* adds several records at once (atomically); a *wizard* starts from the routing policy. Alias records, TTL presets, multi-value records, edit, delete.
+- *Quick create* adds several records at once (atomically). Alias records, TTL presets, multi-value records, edit, delete.
 - Safety rules: duplicates and CNAME conflicts are rejected, the apex NS/SOA records cannot be deleted or renamed.
 
 **Console experience.** Top bar with global search (`Alt+S`), breadcrumbs, collapsible side navigation, an *Info* help panel, dismissible flash notifications, hash-based routing (Back/Forward and deep links work) and a responsive layout.

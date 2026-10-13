@@ -214,22 +214,14 @@ await step("alias record: toggle hides TTL, saves and shows in details panel", a
   assert.match(await text(".tools"), /Alias target/); assert.match(await text(".tools"), /Evaluate target health Yes/);
   await page.locator("tbody tr", { hasText: "cdn.e2e-test.com" }).locator("input").uncheck();
 });
-await step("wizard: choose routing policy, Record ID is required", async () => {
+await step("weighted routing policy: Record ID is required", async () => {
   await page.getByRole("button", { name: "Create record" }).click();
-  await page.getByRole("button", { name: "Switch to wizard" }).click();
-  await page.getByRole("heading", { name: "Choose routing policy" }).waitFor();
-  await page.getByLabel(/^Weighted/).check();
-  await page.getByRole("button", { name: "Next", exact: true }).click();
-  await page.getByRole("heading", { name: "Configure records" }).waitFor();
-  assert.equal(await page.locator("#record-0-policy").inputValue(), "Weighted");
+  await page.locator("#record-0-policy").selectOption("Weighted");
   await page.locator("#record-0-name").fill("api");
   await page.locator("#record-0-value").fill("203.0.113.5");
   await page.getByRole("button", { name: "Create records" }).click();
   await page.getByText(/Record ID is required/).first().waitFor();
   await page.locator("#record-0-setid").fill("blue");
-  await page.getByRole("button", { name: "Previous" }).click();
-  await page.getByRole("heading", { name: "Choose routing policy" }).waitFor();
-  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.getByRole("button", { name: "Create records" }).click();
   await flash("Record created successfully").waitFor(); await ready();
 });
